@@ -1,0 +1,22 @@
+{% extends 'layout.html.twig' %}
+
+{% set pageTitle = 'command.edit' %}
+{% set pageSubTitle = 'command.subtitle' %}
+
+{% block wrapper %}
+
+    <div class="row">
+        <div class="col-md-8">
+            <!-- START card-->
+            <div class="card card-default">
+                <div class="card-header"><a class="btn btn-primary" href="{{ path('command_index') }}">{{ 'action.back_to_list'|trans }}</a></div>
+                <div class="card-body">
+                    {{ include('command/_form.html.twig', {'button_label': 'action.update'|trans}) }}
+                    <a class="btn btn-primary" href="{{ path('command_index') }}">{{ 'action.back_to_list'|trans }}</a>
+                    {{ include('command/_delete_form.html.twig') }}
+                </div>
+            </div><!-- END card-->
+        </div>
+    </div>
+
+{% endblock %}

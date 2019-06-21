@@ -1,0 +1,19 @@
+{% extends 'layout.html.twig' %}
+
+{% set pageTitle = 'realm.new' %}
+{% set pageSubTitle = 'realm.subtitle' %}
+
+{% block wrapper %}
+    <div class="row">
+        <div class="col-md-4">
+            <!-- START card-->
+            <div class="card card-default">
+                <div class="card-header">{{ 'configuration'|trans }}</div>
+                <div class="card-body">
+                    {{ include('realm/_form.html.twig', {'button_label': 'action.save'|trans}) }}
+                    <a class="btn btn-primary" href="{{ path('realms_index') }}">{{ 'action.back_to_list'|trans }}</a>
+                </div>
+            </div><!-- END card-->
+        </div>
+    </div>
+{% endblock %}
