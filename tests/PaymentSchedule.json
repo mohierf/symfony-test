@@ -1,0 +1,392 @@
+{
+  "definitions": {},
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://example.com/root.json",
+  "type": "object",
+  "title": "The Root Schema",
+  "required": [
+    "bankAccount",
+    "bankName",
+    "packageName",
+    "payments",
+    "date",
+    "client",
+    "contractNumber"
+  ],
+  "properties": {
+    "bankAccount": {
+      "$id": "#/properties/bankAccount",
+      "type": "string",
+      "title": "The Bankaccount Schema",
+      "default": "",
+      "examples": [
+        "n/a"
+      ],
+      "pattern": "^(.*)$"
+    },
+    "bankName": {
+      "$id": "#/properties/bankName",
+      "type": "string",
+      "title": "The Bankname Schema",
+      "default": "",
+      "examples": [
+        "n/a"
+      ],
+      "pattern": "^(.*)$"
+    },
+    "packageName": {
+      "$id": "#/properties/packageName",
+      "type": "string",
+      "title": "The Packagename Schema",
+      "default": "",
+      "examples": [
+        "EXCELLENCE"
+      ],
+      "pattern": "^(.*)$"
+    },
+    "payments": {
+      "$id": "#/properties/payments",
+      "type": "array",
+      "title": "The Payments Schema",
+      "items": {
+        "$id": "#/properties/payments/items",
+        "type": "object",
+        "title": "The Items Schema",
+        "required": [
+          "date",
+          "discountAmount",
+          "dueAmount",
+          "label",
+          "paymentAmount"
+        ],
+        "properties": {
+          "date": {
+            "$id": "#/properties/payments/items/properties/date",
+            "type": "string",
+            "title": "The Date Schema",
+            "default": "",
+            "examples": [
+              "2019-03-28T00:00:00+01:00"
+            ],
+            "pattern": "^(.*)$"
+          },
+          "discountAmount": {
+            "$id": "#/properties/payments/items/properties/discountAmount",
+            "type": "string",
+            "title": "The Discountamount Schema",
+            "default": "",
+            "examples": [
+              "51.99"
+            ],
+            "pattern": "^(.*)$"
+          },
+          "dueAmount": {
+            "$id": "#/properties/payments/items/properties/dueAmount",
+            "type": "string",
+            "title": "The Dueamount Schema",
+            "default": "",
+            "examples": [
+              "0"
+            ],
+            "pattern": "^(.*)$"
+          },
+          "label": {
+            "$id": "#/properties/payments/items/properties/label",
+            "type": "null",
+            "title": "The Label Schema",
+            "default": null,
+            "examples": [
+              null
+            ]
+          },
+          "paymentAmount": {
+            "$id": "#/properties/payments/items/properties/paymentAmount",
+            "type": "string",
+            "title": "The Paymentamount Schema",
+            "default": "",
+            "examples": [
+              "51.99"
+            ],
+            "pattern": "^(.*)$"
+          }
+        }
+      }
+    },
+    "date": {
+      "$id": "#/properties/date",
+      "type": "string",
+      "title": "The Date Schema",
+      "default": "",
+      "examples": [
+        "2019-04-05T14:25:49+02:00"
+      ],
+      "pattern": "^(.*)$"
+    },
+    "client": {
+      "$id": "#/properties/client",
+      "type": "object",
+      "title": "The Client Schema",
+      "required": [
+        "name",
+        "firstName",
+        "lastName",
+        "invoiceAddress",
+        "clientAddress"
+      ],
+      "properties": {
+        "name": {
+          "$id": "#/properties/client/properties/name",
+          "type": "string",
+          "title": "The Name Schema",
+          "default": "",
+          "examples": [
+            "Mmi Eppi Meosi Cuisotxem"
+          ],
+          "pattern": "^(.*)$"
+        },
+        "firstName": {
+          "$id": "#/properties/client/properties/firstName",
+          "type": "string",
+          "title": "The Firstname Schema",
+          "default": "",
+          "examples": [
+            "Eppi Meosi"
+          ],
+          "pattern": "^(.*)$"
+        },
+        "lastName": {
+          "$id": "#/properties/client/properties/lastName",
+          "type": "string",
+          "title": "The Lastname Schema",
+          "default": "",
+          "examples": [
+            "Cuisotxem"
+          ],
+          "pattern": "^(.*)$"
+        },
+        "invoiceAddress": {
+          "$id": "#/properties/client/properties/invoiceAddress",
+          "type": "object",
+          "title": "The Invoiceaddress Schema",
+          "required": [
+            "name",
+            "address",
+            "countryCode",
+            "city",
+            "country",
+            "email",
+            "firstName",
+            "lastName",
+            "postalCode"
+          ],
+          "properties": {
+            "name": {
+              "$id": "#/properties/client/properties/invoiceAddress/properties/name",
+              "type": "string",
+              "title": "The Name Schema",
+              "default": "",
+              "examples": [
+                "EPPI MEOSI CUISOTXEM"
+              ],
+              "pattern": "^(.*)$"
+            },
+            "address": {
+              "$id": "#/properties/client/properties/invoiceAddress/properties/address",
+              "type": "null",
+              "title": "The Address Schema",
+              "default": null,
+              "examples": [
+                null
+              ]
+            },
+            "countryCode": {
+              "$id": "#/properties/client/properties/invoiceAddress/properties/countryCode",
+              "type": "string",
+              "title": "The Countrycode Schema",
+              "default": "",
+              "examples": [
+                "fr"
+              ],
+              "pattern": "^(.*)$"
+            },
+            "city": {
+              "$id": "#/properties/client/properties/invoiceAddress/properties/city",
+              "type": "string",
+              "title": "The City Schema",
+              "default": "",
+              "examples": [
+                "SURESNES"
+              ],
+              "pattern": "^(.*)$"
+            },
+            "country": {
+              "$id": "#/properties/client/properties/invoiceAddress/properties/country",
+              "type": "string",
+              "title": "The Country Schema",
+              "default": "",
+              "examples": [
+                "France"
+              ],
+              "pattern": "^(.*)$"
+            },
+            "email": {
+              "$id": "#/properties/client/properties/invoiceAddress/properties/email",
+              "type": "null",
+              "title": "The Email Schema",
+              "default": null,
+              "examples": [
+                null
+              ]
+            },
+            "firstName": {
+              "$id": "#/properties/client/properties/invoiceAddress/properties/firstName",
+              "type": "string",
+              "title": "The Firstname Schema",
+              "default": "",
+              "examples": [
+                ""
+              ],
+              "pattern": "^(.*)$"
+            },
+            "lastName": {
+              "$id": "#/properties/client/properties/invoiceAddress/properties/lastName",
+              "type": "string",
+              "title": "The Lastname Schema",
+              "default": "",
+              "examples": [
+                ""
+              ],
+              "pattern": "^(.*)$"
+            },
+            "postalCode": {
+              "$id": "#/properties/client/properties/invoiceAddress/properties/postalCode",
+              "type": "string",
+              "title": "The Postalcode Schema",
+              "default": "",
+              "examples": [
+                "92150"
+              ],
+              "pattern": "^(.*)$"
+            }
+          }
+        },
+        "clientAddress": {
+          "$id": "#/properties/client/properties/clientAddress",
+          "type": "object",
+          "title": "The Clientaddress Schema",
+          "required": [
+            "name",
+            "address",
+            "countryCode",
+            "city",
+            "country",
+            "email",
+            "firstName",
+            "lastName",
+            "postalCode"
+          ],
+          "properties": {
+            "name": {
+              "$id": "#/properties/client/properties/clientAddress/properties/name",
+              "type": "string",
+              "title": "The Name Schema",
+              "default": "",
+              "examples": [
+                "EPPI MEOSI CUISOTXEM"
+              ],
+              "pattern": "^(.*)$"
+            },
+            "address": {
+              "$id": "#/properties/client/properties/clientAddress/properties/address",
+              "type": "null",
+              "title": "The Address Schema",
+              "default": null,
+              "examples": [
+                null
+              ]
+            },
+            "countryCode": {
+              "$id": "#/properties/client/properties/clientAddress/properties/countryCode",
+              "type": "string",
+              "title": "The Countrycode Schema",
+              "default": "",
+              "examples": [
+                "fr"
+              ],
+              "pattern": "^(.*)$"
+            },
+            "city": {
+              "$id": "#/properties/client/properties/clientAddress/properties/city",
+              "type": "string",
+              "title": "The City Schema",
+              "default": "",
+              "examples": [
+                "SURESNES"
+              ],
+              "pattern": "^(.*)$"
+            },
+            "country": {
+              "$id": "#/properties/client/properties/clientAddress/properties/country",
+              "type": "string",
+              "title": "The Country Schema",
+              "default": "",
+              "examples": [
+                "France"
+              ],
+              "pattern": "^(.*)$"
+            },
+            "email": {
+              "$id": "#/properties/client/properties/clientAddress/properties/email",
+              "type": "null",
+              "title": "The Email Schema",
+              "default": null,
+              "examples": [
+                null
+              ]
+            },
+            "firstName": {
+              "$id": "#/properties/client/properties/clientAddress/properties/firstName",
+              "type": "string",
+              "title": "The Firstname Schema",
+              "default": "",
+              "examples": [
+                ""
+              ],
+              "pattern": "^(.*)$"
+            },
+            "lastName": {
+              "$id": "#/properties/client/properties/clientAddress/properties/lastName",
+              "type": "string",
+              "title": "The Lastname Schema",
+              "default": "",
+              "examples": [
+                ""
+              ],
+              "pattern": "^(.*)$"
+            },
+            "postalCode": {
+              "$id": "#/properties/client/properties/clientAddress/properties/postalCode",
+              "type": "string",
+              "title": "The Postalcode Schema",
+              "default": "",
+              "examples": [
+                "92150"
+              ],
+              "pattern": "^(.*)$"
+            }
+          }
+        }
+      }
+    },
+    "contractNumber": {
+      "$id": "#/properties/contractNumber",
+      "type": "string",
+      "title": "The Contractnumber Schema",
+      "default": "",
+      "examples": [
+        "4796874"
+      ],
+      "pattern": "^(.*)$"
+    }
+  }
+}

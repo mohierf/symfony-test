@@ -1,0 +1,220 @@
+{
+  "description": "Hubside Invoice Schema",
+  "type": "object",
+  "required": [
+    "number",
+    "date",
+    "clientName",
+    "clientAddress",
+    "companyName",
+    "items",
+    "paymentDeadline",
+    "optionalMentions",
+    "scheduledDate",
+    "meanOfPayment",
+    "vatDetails"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "number": {
+      "type": "string"
+    },
+    "date": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "clientName": {
+      "type": "string"
+    },
+    "clientAddress": {
+      "type": "object",
+      "properties": {
+        "city": {
+          "type": "string"
+        },
+        "postalCode": {
+          "type": "string"
+        },
+        "country": {
+          "type": "string"
+        },
+        "address": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "city",
+        "postalCode",
+        "country",
+        "address"
+      ]
+    },
+    "commercialCredit": {
+      "type": "boolean"
+    },
+    "companyName": {
+      "type": "string"
+    },
+    "companyAddress": {
+      "type": "object",
+      "properties": {
+        "city": {
+          "type": "string"
+        },
+        "postalCode": {
+          "type": "string"
+        },
+        "country": {
+          "type": "string"
+        },
+        "address": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "city",
+        "postalCode",
+        "country",
+        "address"
+      ]
+    },
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "string"
+          },
+          "price": {
+            "type": "boolean"
+          },
+          "quantity": {
+            "type": "integer"
+          },
+          "pricePerUnit": {
+            "type": "string"
+          },
+          "priceWithTax": {
+            "type": "string"
+          },
+          "taxRate": {
+            "type": "string"
+          },
+          "subItems": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "content": {
+                  "type": "string"
+                },
+                "price": {
+                  "type": "boolean"
+                },
+                "quantity": {
+                  "oneOf": [
+                    {
+                      "type": "integer"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "pricePerUnit": {
+                  "oneOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "priceWithTax": {
+                  "oneOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "taxRate": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "content",
+                "quantity",
+                "pricePerUnit",
+                "priceWithTax",
+                "taxRate"
+              ]
+            }
+          }
+        },
+        "required": [
+          "content",
+          "quantity",
+          "pricePerUnit",
+          "priceWithTax",
+          "taxRate",
+          "subItems"
+        ]
+      },
+      "minItems": 1
+    },
+    "paymentDeadline": {
+      "oneOf": [
+        {
+          "type": "string",
+          "format": "date-time"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "optionalMentions": {
+      "type": "string"
+    },
+    "scheduledDate": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "meanOfPayment": {
+      "type": "string"
+    },
+    "templateUuid": {
+      "type": "string",
+      "pattern": "[0-9a-f]{8}\\b-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-\\b[0-9a-f]{12}"
+    },
+    "vatDetails": {
+      "$id": "#/properties/vatDetails",
+      "type": "array",
+      "title": "The Vatdetails Schema",
+      "items": {
+        "$id": "#/properties/vatDetails/items",
+        "type": "object",
+        "title": "The Items Schema",
+        "required": [
+          "rate",
+          "value"
+        ],
+        "properties": {
+          "rate": {
+            "type": "string"
+          },
+          "value": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}
