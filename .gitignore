@@ -1,6 +1,5 @@
 ###> PhpStorm configuration ###
-### Keep the configuration
-### .idea
+/.idea
 ###< symfony/web-server-bundle ###
 
 ###> symfony/framework-bundle ###
