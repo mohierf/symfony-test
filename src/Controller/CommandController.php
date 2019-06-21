@@ -59,6 +59,7 @@ class CommandController extends AbstractController
 
     /**
      * @Route("/{id}", name="command_show", methods="GET")
+     * @Route("/{id}/show", name="command_show", methods="GET")
      *
      * @param Command $command
      *
@@ -70,7 +71,7 @@ class CommandController extends AbstractController
     }
 
     /**
-     * @Route("/edit", name="command_edit", methods="GET|POST")
+     * @Route("/{id}/edit", name="command_edit", methods="GET|POST")
      *
      * @param Request $request
      * @param Command $command
