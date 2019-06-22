@@ -3,13 +3,9 @@
 {% block title %}Hello {{ controller_name }}!{% endblock %}
 
 {% block body %}
-    <style>
-        .example-wrapper { margin: 1em auto; max-width: 800px; width: 95%; font: 18px/1.5 sans-serif; }
-        .example-wrapper code { background: #F5F5F5; padding: 2px 6px; }
-    </style>
-
-    <div class="example-wrapper">
-        <h1>Hello {{ controller_name }}!</h1>
+    <div class="row">
+        <div class="example-wrapper col-md-6">
+            <h1>Hello {{ controller_name }}!</h1>
 
         <a class="btn btn-primary" href="{{ path('realm_new') }}">{{ 'Create new'|trans }}</a>
         <div class="panel">
@@ -54,6 +50,7 @@
                 {% endfor %}
                 </tbody>
             </table>
+        </div>
         </div>
     </div>
 {% endblock %}
