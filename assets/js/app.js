@@ -1,6 +1,7 @@
-// app.js
+// assets/js/app.js
+// ...
 
-import '../css/app.scss';
+require('../css/app.css');
 
 const $ = require('jquery');
 // this "modifies" the jquery module: adding behavior to it
