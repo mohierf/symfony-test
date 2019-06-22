@@ -45,6 +45,10 @@ class Realm
         $this->realms = new ArrayCollection();
     }
 
+    public function __toString() {
+        return $this->realm_name;
+    }
+
     public function getId(): ?int
     {
         return $this->id;
@@ -58,6 +62,18 @@ class Realm
     public function setRealmName(string $realm_name): self
     {
         $this->realm_name = $realm_name;
+
+        return $this;
+    }
+
+    public function getAlias(): ?string
+    {
+        return $this->alias;
+    }
+
+    public function setAlias(string $alias): self
+    {
+        $this->alias = $alias;
 
         return $this;
     }
@@ -101,18 +117,6 @@ class Realm
                 $realm->setParent(null);
             }
         }
-
-        return $this;
-    }
-
-    public function getAlias(): ?string
-    {
-        return $this->alias;
-    }
-
-    public function setAlias(string $alias): self
-    {
-        $this->alias = $alias;
 
         return $this;
     }

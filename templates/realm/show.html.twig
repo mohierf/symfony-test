@@ -1,0 +1,45 @@
+{% extends 'layout.html.twig' %}
+
+{% set pageTitle = 'realm.show' %}
+{% set pageSubTitle = 'realm.subtitle' %}
+
+{% block wrapper %}
+
+    <table class="table">
+        <tbody>
+        <tr>
+            <th>Id</th>
+            <td>{{ realm.id }}</td>
+        </tr>
+        <tr>
+            <th>{{ 'trans.field.realm_name'|trans }}</th>
+            <td>{{ realm.getRealmName() }}</td>
+        </tr>
+        <tr>
+            <th>{{ 'trans.field.alias'|trans }}</th>
+            <td>{{ realm.getAlias() }}</td>
+        </tr>
+        <tr>
+            <th>{{ 'trans.field.parent'|trans }}</th>
+            <td>{{ realm.getParent() }}</td>
+        </tr>
+        <tr>
+            <th>{{ 'trans.field.realms'|trans }}</th>
+            <td>
+                {% for child in realm.getRealms() %}
+                    {{ child.getRealmName() }}
+                {% else %}
+                    {{ '-/-'|trans }}
+                {% endfor %}
+            </td>
+        </tr>
+        </tbody>
+    </table>
+
+    <a class="btn btn-primary" href="{{ path('realm_index') }}">{{ 'action.back_to_list'|trans }}</a>
+
+    {% if is_granted('ROLE_ADMIN') %}
+    {{ include('realm/_delete_form.html.twig') }}
+    {% endif %}
+
+{% endblock %}
