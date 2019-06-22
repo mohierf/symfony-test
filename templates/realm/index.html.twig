@@ -2,9 +2,9 @@
 
 {% block title %}Hello {{ controller_name }}!{% endblock %}
 
-{% block body %}
+{% block wrapper %}
     <div class="row">
-        <div class="example-wrapper col-md-6">
+        <div class="example-wrapper">
             <h1>Hello {{ controller_name }}!</h1>
 
         <a class="btn btn-primary" href="{{ path('realm_new') }}">{{ 'Create new'|trans }}</a>
@@ -12,21 +12,22 @@
             {{ json_content }}
         </div>
         <div class="table-responsive">
-            <table class="table table-striped table-bordered">
-                <thead>
+            <table class="table table-sm table-hover">
+                <caption>List of realms</caption>
+                <thead class="thead-dark">
                 <tr>
-                    <th>Id</th>
-                    <th>{{ 'realm_name'|trans }}</th>
-                    <th>{{ 'alias'|trans }}</th>
-                    <th>{{ 'parent'|trans }}</th>
-                    <th>{{ 'children'|trans }}</th>
-                    <th>{{ 'Actions'|trans }}</th>
+                    <th scope="col">Id</th>
+                    <th scope="col">{{ 'realm_name'|trans }}</th>
+                    <th scope="col">{{ 'alias'|trans }}</th>
+                    <th scope="col">{{ 'parent'|trans }}</th>
+                    <th scope="col">{{ 'children'|trans }}</th>
+                    <th scope="col">{{ 'Actions'|trans }}</th>
                 </tr>
                 </thead>
                 <tbody>
                 {% for item in items %}
                     <tr>
-                        <td>{{ item.id }}</td>
+                        <th scope="row">{{ item.id }}</th>
                         <td>{{ item.getRealmName() }}</td>
                         <td>{{ item.getAlias() }}</td>
                         <td>{{ item.getParent() }}</td>
@@ -39,8 +40,11 @@
                         </td>
 
                         <td>
-                            <a class="btn btn-light" href="{{ path('realm_show', {'id': item.id}) }}" title="{{ 'action.preview'|trans }}"><i class="fa fa-eye"></i></a>
-                            <a class="btn btn-primary" href="{{ path('realm_edit', {'id': item.id}) }}" title="{{ 'action.edit'|trans }}"><i class="fa fa-edit"></i></a>
+{#                            <a class="btn btn-light" href="{{ path('realm_show', {'id': item.id}) }}" #}
+{#                               title="{{ 'action.preview'|trans }}"><i class="fa fa-eye"></i></a>#}
+                            <a class="btn btn-primary" href="{{ path('realm_edit', {'id': item.id}) }}"
+                               title="{{ 'action.edit'|trans }}"><i class="fa fa-edit"></i></a>
+                            {{ include('realm/_delete_form.html.twig', {'realm': item}) }}
                         </td>
                     </tr>
                 {% else %}

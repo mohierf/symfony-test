@@ -27,9 +27,7 @@
                             <div>{{ pageTitle | default('') | trans }}<small>{{ pageSubTitle | default('') | trans }}</small></div>
                         </div>
                     {% endblock %}
-                    <div class="alert alert-primary" role="alert">
-                        This is a primary alert—check it out!
-                    </div>
+
                     {% for label, messages in app.flashes %}
                         {% for message in messages %}
                             <div class="alert alert-{{ label }}">
@@ -37,6 +35,7 @@
                             </div>
                         {% endfor %}
                     {% endfor %}
+
                     {% block wrapper %}
                     {% endblock %}
                 </div>
