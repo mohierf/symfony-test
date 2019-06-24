@@ -4,6 +4,8 @@ namespace App\Entity;
 
 use App\Entity\Traits\IdTrait;
 use App\Entity\Traits\TimestampTrait;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
@@ -30,6 +32,20 @@ class JsonSchema
      * @ORM\Column(name="name", type="string", length=255)
      */
     protected $name = '';
+
+    /**
+     * @ORM\OneToMany(targetEntity="App\Entity\JsonField", mappedBy="jsonSchema", orphanRemoval=true)
+     */
+    private $jsonFields;
+
+    public function __construct()
+    {
+        $this->jsonFields = new ArrayCollection();
+    }
+
+    public function __toString() {
+        return $this->name;
+    }
 
     /**
      * @return mixed
@@ -67,6 +83,37 @@ class JsonSchema
     public function setName(string $name): JsonSchema
     {
         $this->name = $name;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|JsonField[]
+     */
+    public function getJsonFields(): Collection
+    {
+        return $this->jsonFields;
+    }
+
+    public function addJsonField(JsonField $jsonField): self
+    {
+        if (!$this->jsonFields->contains($jsonField)) {
+            $this->jsonFields[] = $jsonField;
+            $jsonField->setJsonSchema($this);
+        }
+
+        return $this;
+    }
+
+    public function removeJsonField(JsonField $jsonField): self
+    {
+        if ($this->jsonFields->contains($jsonField)) {
+            $this->jsonFields->removeElement($jsonField);
+            // set the owning side to null (unless already changed)
+            if ($jsonField->getJsonSchema() === $this) {
+                $jsonField->setJsonSchema(null);
+            }
+        }
 
         return $this;
     }

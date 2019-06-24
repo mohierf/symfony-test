@@ -1,0 +1,41 @@
+{% extends 'layout.html.twig' %}
+
+{% set pageTitle = 'json_field.show' %}
+{% set pageSubTitle = 'json_field.subtitle' %}
+
+{% block wrapper %}
+
+    <table class="table">
+        <tbody>
+        <tr>
+            <th>Id</th>
+            <td>{{ json_field.id }}</td>
+        </tr>
+        <tr>
+            <th>{{ 'trans.field.json_field_name'|trans }}</th>
+            <td>{{ json_field.getName() }}</td>
+        </tr>
+        <tr>
+            <th>{{ 'trans.field.parent'|trans }}</th>
+            <td>{{ json_field.getParent() }}</td>
+        </tr>
+        <tr>
+            <th>{{ 'trans.field.json_fields'|trans }}</th>
+            <td>
+                {% for child in json_field.getRealms() %}
+                    {{ child.getRealmName() }}
+                {% else %}
+                    {{ '-/-'|trans }}
+                {% endfor %}
+            </td>
+        </tr>
+        </tbody>
+    </table>
+
+    <a class="btn btn-primary" href="{{ path('json_field_index') }}">{{ 'action.back_to_list'|trans }}</a>
+
+    {% if is_granted('ROLE_ADMIN') %}
+    {{ include('json_field/_delete_form.html.twig') }}
+    {% endif %}
+
+{% endblock %}

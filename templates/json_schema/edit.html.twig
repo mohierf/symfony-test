@@ -1,0 +1,150 @@
+{% extends 'layout.html.twig' %}
+
+{% set pageTitle = 'json_schema.edit' %}
+{% set pageSubTitle = 'Gestion des schémas JSON' %}
+
+{% block wrapper %}
+    <style type="text/css">
+        /* custom bold styling for non-default JSON schema values */
+        .jsoneditor-is-not-default {
+            font-weight: bold;
+        }
+    </style>
+
+    <div class="row">
+        <div class="col-md-3">
+            <!-- START card-->
+            <div class="card card-default">
+                <div class="card-header"><a class="btn btn-primary" href="{{ path('json_schema_index') }}">{{ 'action.back_to_list'|trans }}</a></div>
+                <div class="card-body">
+                    {{ include('json_schema/_form.html.twig', {'button_label': 'action.update'|trans}) }}
+                    <a class="btn btn-primary" href="{{ path('json_schema_index') }}">{{ 'action.back_to_list'|trans }}</a>
+                    {{ include('json_schema/_delete_form.html.twig') }}
+                </div>
+            </div><!-- END card-->
+        </div>
+        <div class="col-md-9">
+            <!-- JSON editor -->
+            <div id="jsoneditor" style="width: auto; height: 20vh;"></div>
+
+            <div class="row" id="json_tree">
+            </div>
+            <!-- START card-->
+            <div class="card card-default">
+                <div class="card-header">{{ meta_schema_name }}</div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-bordered">
+                            <thead>
+                            <tr>
+                                <th>Id</th>
+                                <th>{{ 'level'|trans }}</th>
+                                <th>{{ 'parent'|trans }}</th>
+                                <th>{{ 'type'|trans }}</th>
+                                <th>{{ 'name'|trans }}</th>
+                                <th>{{ 'Actions'|trans }}</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for item in json_schema_list %}
+                                <tr>
+                                    <td>{{ item.getId() }}</td>
+                                    <td>{{ item.getLevel() }}</td>
+                                    <td>{{ item.getParent() }}</td>
+                                    <td>{{ item.getType() }}</td>
+                                    <td>{{ item.getName() }}</td>
+                                </tr>
+                            {% else %}
+                                <tr>
+                                    <td colspan="3">{{ 'no records found'|trans }}</td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div><!-- END card-->
+        </div>
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    <script src="{{ asset('build/json-editor-page.js') }}"></script>
+
+    <script type="text/javascript">
+        // require('jsoneditor/dist/jsoneditor.css');
+        // require('jsoneditor/dist/jsoneditor.js');
+        // import JSONEditor from 'jsoneditor/dist/jsoneditor.js';
+
+        $(document).ready(function(){
+            console.log("Script working properly!");
+
+            // **********
+            // JS Tree
+            // **********
+
+            // var json = $('#json_schema_content').text();
+            // json = JSON.parse(json);
+            // console.log(json);
+
+            // json.forEach((item, index) => {
+            //     console.log(item) //value
+            //     if (item.parent === null) {
+            //         item.parent = '#';
+            //     } else {
+            //         item.parent = 1;
+            //     }
+            //     item.text = item.id + item.alias;
+            // });
+            // console.log(json);
+            //
+            var json1 = [
+                {"id":1,"text":"Root node","children":[{"id":2,"text":"Child node 1"},{"id":3,"text":"Child node 2"}]}
+            ];
+            var json2 = [
+                { "id" : "ajson1", "parent" : "#", "text" : "Simple root node" },
+                { "id" : "ajson2", "parent" : "#", "text" : "Root node 2" },
+                { "id" : "ajson2-2", "parent" : "#", "text" : "Root node 3" },
+                { "id" : "ajson3", "parent" : "ajson2", "text" : "Child 1" },
+                { "id" : "ajson4", "parent" : "ajson2", "text" : "Child 2" },
+            ];
+            // var jt = $('#json_tree').jstree({ 'core' : {
+            //   'data' : json
+            // } });
+
+
+            // var jt = $("#json_tree")
+            //     .jstree({
+            //         "core" : {
+            //             "check_callback" : true,   // Allow to change the tree
+            //             "data" : json
+            //         },
+            //         "plugins" : [
+            //             "state", "sort"
+            //         ],
+            //         "state": {
+            //             "key": "json_tree",
+            //             "filter": function(state) {
+            //                 console.log('Restoring saved state: ', state);
+            //             }
+            //         }
+            //     })
+            //     .bind('ready.jstree', function(e, data) {
+            //         var o_json_tree_tree = $("#json_tree_tree").jstree(true);
+            //         console.log('json_tree tree ready!');
+            //     })
+            //
+            //     .bind('changed.jstree', function(event, action) {
+            //         console.log('Changed :', action.action, action.node);
+            //
+            //         if (action.action == 'select_node') {
+            //             console.log('Selected :', action.node);
+            //
+            //             if (action.node.data.type == 'json') {
+            //
+            //             }
+            //         }
+            //     });
+        });
+    </script>
+{% endblock %}

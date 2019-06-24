@@ -15,10 +15,11 @@ require('bootstrap');
 require("bootstrap/dist/css/bootstrap.css");
 // Font awesome 5
 require('@fortawesome/fontawesome-free/css/all.min.css');
-// jsTree
-require('jstree/dist/themes/default-dark/style.css');
-require('jstree/dist/jstree.min');
 
+
+// jsTree
+require('jstree/dist/themes/default-dark/style.min.css');
+require('jstree/dist/jstree.min.js');
 
 $(document).ready(function() {
     console.log("Ready!");

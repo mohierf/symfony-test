@@ -2,9 +2,11 @@
 
 namespace App\Services;
 
+use App\Entity\JsonField;
 use App\Entity\JsonSchema;
 use JsonSchema\Exception\InvalidSchemaException;
 use JsonSchema\Validator;
+use Psr\Log\LoggerInterface;
 use stdClass;
 use Symfony\Component\HttpFoundation\JsonResponse;
 
@@ -13,6 +15,21 @@ use Symfony\Component\HttpFoundation\JsonResponse;
  */
 class JsonSchemaService
 {
+    /**
+     * @var LoggerInterface
+     */
+    private $logger;
+
+    /**
+     * JsonSchemaService constructor.
+     *
+     * @param LoggerInterface $logger
+     */
+    public function __construct(LoggerInterface $logger)
+    {
+        $this->logger = $logger;
+    }
+
     /**
      * Validate a JSON string against a given JSON schema.
      *
@@ -40,6 +57,84 @@ class JsonSchemaService
         }
 
         return true;
+    }
+
+    /**
+     * @param JsonSchema $jsonSchema
+     *
+     * @return array
+     */
+    public function getFieldsFromSchema(JsonSchema $jsonSchema): array
+    {
+        $fields = [];
+        $this->logger->info("Get fields from schema: " . $jsonSchema->getName());
+        $this->_initializeFields($jsonSchema->getContent(), $fields);
+
+        return $fields;
+    }
+
+    /**
+     * Extract fields from a Json Schema.
+     *
+     * @param        $object
+     * @param        $fields
+     * @param int    $level
+     * @param string $parent
+     * @param string $prefix
+     *
+     * @return array
+     */
+    private function _initializeFields($object, &$fields, $level = 0, $parent = '#', string $prefix = ''): array
+    {
+        $object = $object instanceof stdClass ? $object : json_decode($object);
+        $flat = [];
+        $separator = '_';
+
+        foreach ($object->properties as $key => $value) {
+            $this->logger->info($level . '/' . $parent . ' -> ' . $key . ", value: " . serialize($value));
+
+            $jsField = new JsonField();
+            $jsField->setId($key);
+            $jsField->setLevel($level);
+            $jsField->setName($key);
+            $jsField->setParent($parent);
+
+            if (isset($value->type)) {
+                $this->logger->info($key . ", type: " . $value->type);
+                $type = $value->type;
+                $jsField->setType($type);
+
+                if ('array' === $type) {
+                    // Complex type: array
+                    $this->_initializeFields($value->items, $fields, $level + 1, $parent, $key);
+                } elseif ('object' === $type) {
+                    if ('#' === $parent) {
+                        $prefix .= $separator.$key;
+                        $this->_initializeFields($value, $fields, $level + 1, $prefix, $prefix);
+                    } else {
+                        $prefix = $parent.'_'.$key;
+                        $this->_initializeFields($value, $fields, $level + 1, $key, $prefix);
+                    }
+                    $prefix = '';
+                } else {
+                    $jsField->setValue($value);
+
+                    $key = ltrim($prefix.$separator.$key, $separator);
+                    $fields[$key] = $jsField;
+                }
+            } elseif (isset($value->oneOf)) {
+                $this->logger->info($key . ", type: oneOf");
+                $jsField->setType('oneOf');
+                $jsField->setValue($value);
+
+                $key = ltrim($prefix.$separator.$key, $separator);
+                $fields[$key] = $jsField;
+            }
+
+            $this->logger->info($key . ", jsField: " . $jsField);
+        }
+
+        return $flat;
     }
 
     /**

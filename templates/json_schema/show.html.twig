@@ -1,0 +1,28 @@
+{% extends 'layout.html.twig' %}
+
+{% set pageTitle = 'json_schema.show' %}
+{% set pageSubTitle = 'Gestion des schémas Json' %}
+
+{% block wrapper %}
+
+    <table class="table">
+        <tbody>
+        <tr>
+            <th>Id</th>
+            <td>{{ json_schema.id }}</td>
+        </tr>
+        <tr>
+            <th>{{ 'trans.field.name'|trans }}</th>
+            <td>{{ json_schema.name }}</td>
+        </tr>
+        </tbody>
+    </table>
+
+    <a class="btn btn-primary" href="{{ path('json_schema_index') }}">{{ 'action.back_to_list'|trans }}</a>
+
+    {% if is_granted('ROLE_ADMIN') %}
+
+    {{ include('json_schema/_delete_form.html.twig') }}
+    {% endif %}
+
+{% endblock %}
