@@ -7,9 +7,18 @@
         <div class="example-wrapper">
             <h1>Hello {{ controller_name }}!</h1>
 
-        <a class="btn btn-primary" href="{{ path('realm_new') }}">{{ 'Create new'|trans }}</a>
-        <div class="panel">
-            {{ json_content }}
+
+            <h1>Inline data demo</h1>
+            <div id="data" class="demo"></div>
+
+
+            <a class="btn btn-primary" href="{{ path('realm_new') }}">{{ 'Create new'|trans }}</a>
+        <div class="row">
+            <div class="col-md-6" id="json_tree">
+            </div>
+            <div class="col-md-6" id="json_content">
+                {{ json_content }}
+            </div>
         </div>
         <div class="table-responsive">
             <table class="table table-sm table-hover">
@@ -56,5 +65,37 @@
             </table>
         </div>
         </div>
+
     </div>
+{% endblock %}
+
+{% block javascripts %}
+<script type="text/javascript">
+  $(document).ready(function(){
+    console.log("Script working properly");
+    var json = [
+      {"id":1,"text":"Root node","children":[{"id":2,"text":"Child node 1"},{"id":3,"text":"Child node 2"}]}
+      ];
+    var json = [
+      { "id" : "ajson1", "parent" : "#", "text" : "Simple root node" },
+      { "id" : "ajson2", "parent" : "#", "text" : "Root node 2" },
+      { "id" : "ajson2-2", "parent" : "#", "text" : "Root node 3" },
+      { "id" : "ajson3", "parent" : "ajson2", "text" : "Child 1" },
+      { "id" : "ajson4", "parent" : "ajson2", "text" : "Child 2" },
+    ];
+    var json = $('#json_content').text();
+    json = JSON.parse(json);
+    console.log(json);
+    var jt = $('#json_tree').jstree({ 'core' : {
+      'data' : json
+    } });
+
+    $('#json_content').on('blur', function(){
+      const ugly = this.value;
+      const obj = JSON.parse(ugly);
+      const pretty = JSON.stringify(obj, undefined, 4);
+      this.value = pretty;
+    });
+  });
+</script>
 {% endblock %}
