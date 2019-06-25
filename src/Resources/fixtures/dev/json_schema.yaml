@@ -1,0 +1,803 @@
+parameters:
+  MetaJsonSchema: '{
+                     "$schema": "http://json-schema.org/draft-07/schema#",
+                     "$id": "http://json-schema.org/draft-07/schema#",
+                     "title": "Core schema meta-schema",
+                     "definitions": {
+                       "schemaArray": {
+                         "type": "array",
+                         "minItems": 1,
+                         "items": { "$ref": "#" }
+                       },
+                       "nonNegativeInteger": {
+                         "type": "integer",
+                         "minimum": 0
+                       },
+                       "nonNegativeIntegerDefault0": {
+                         "allOf": [
+                           { "$ref": "#/definitions/nonNegativeInteger" },
+                           { "default": 0 }
+                         ]
+                       },
+                       "simpleTypes": {
+                         "enum": [
+                           "array",
+                           "boolean",
+                           "integer",
+                           "null",
+                           "number",
+                           "object",
+                           "string"
+                         ]
+                       },
+                       "stringArray": {
+                         "type": "array",
+                         "items": { "type": "string" },
+                         "uniqueItems": true,
+                         "default": []
+                       }
+                     },
+                     "type": ["object", "boolean"],
+                     "properties": {
+                       "$id": {
+                         "type": "string",
+                         "format": "uri-reference"
+                       },
+                       "$schema": {
+                         "type": "string",
+                         "format": "uri"
+                       },
+                       "$ref": {
+                         "type": "string",
+                         "format": "uri-reference"
+                       },
+                       "$comment": {
+                         "type": "string"
+                       },
+                       "title": {
+                         "type": "string"
+                       },
+                       "description": {
+                         "type": "string"
+                       },
+                       "default": true,
+                       "readOnly": {
+                         "type": "boolean",
+                         "default": false
+                       },
+                       "examples": {
+                         "type": "array",
+                         "items": true
+                       },
+                       "multipleOf": {
+                         "type": "number",
+                         "exclusiveMinimum": 0
+                       },
+                       "maximum": {
+                         "type": "number"
+                       },
+                       "exclusiveMaximum": {
+                         "type": "number"
+                       },
+                       "minimum": {
+                         "type": "number"
+                       },
+                       "exclusiveMinimum": {
+                         "type": "number"
+                       },
+                       "maxLength": { "$ref": "#/definitions/nonNegativeInteger" },
+                       "minLength": { "$ref": "#/definitions/nonNegativeIntegerDefault0" },
+                       "pattern": {
+                         "type": "string",
+                         "format": "regex"
+                       },
+                       "additionalItems": { "$ref": "#" },
+                       "items": {
+                         "anyOf": [
+                           { "$ref": "#" },
+                           { "$ref": "#/definitions/schemaArray" }
+                         ],
+                         "default": true
+                       },
+                       "maxItems": { "$ref": "#/definitions/nonNegativeInteger" },
+                       "minItems": { "$ref": "#/definitions/nonNegativeIntegerDefault0" },
+                       "uniqueItems": {
+                         "type": "boolean",
+                         "default": false
+                       },
+                       "contains": { "$ref": "#" },
+                       "maxProperties": { "$ref": "#/definitions/nonNegativeInteger" },
+                       "minProperties": { "$ref": "#/definitions/nonNegativeIntegerDefault0" },
+                       "required": { "$ref": "#/definitions/stringArray" },
+                       "additionalProperties": { "$ref": "#" },
+                       "definitions": {
+                         "type": "object",
+                         "additionalProperties": { "$ref": "#" },
+                         "default": {}
+                       },
+                       "properties": {
+                         "type": "object",
+                         "additionalProperties": { "$ref": "#" },
+                         "default": {}
+                       },
+                       "patternProperties": {
+                         "type": "object",
+                         "additionalProperties": { "$ref": "#" },
+                         "propertyNames": { "format": "regex" },
+                         "default": {}
+                       },
+                       "dependencies": {
+                         "type": "object",
+                         "additionalProperties": {
+                           "anyOf": [
+                             { "$ref": "#" },
+                             { "$ref": "#/definitions/stringArray" }
+                           ]
+                         }
+                       },
+                       "propertyNames": { "$ref": "#" },
+                       "const": true,
+                       "enum": {
+                         "type": "array",
+                         "items": true,
+                         "minItems": 1,
+                         "uniqueItems": true
+                       },
+                       "type": {
+                         "anyOf": [
+                           { "$ref": "#/definitions/simpleTypes" },
+                           {
+                             "type": "array",
+                             "items": { "$ref": "#/definitions/simpleTypes" },
+                             "minItems": 1,
+                             "uniqueItems": true
+                           }
+                         ]
+                       },
+                       "format": { "type": "string" },
+                       "contentMediaType": { "type": "string" },
+                       "contentEncoding": { "type": "string" },
+                       "if": { "$ref": "#" },
+                       "then": { "$ref": "#" },
+                       "else": { "$ref": "#" },
+                       "allOf": { "$ref": "#/definitions/schemaArray" },
+                       "anyOf": { "$ref": "#/definitions/schemaArray" },
+                       "oneOf": { "$ref": "#/definitions/schemaArray" },
+                       "not": { "$ref": "#" }
+                     },
+                     "default": true
+                   }'
+  HubsideInvoiceJsonSchema: '{
+                                 "description": "Hubside Invoice Schema",
+                                 "type": "object",
+                                 "required": [
+                                     "number",
+                                     "date",
+                                     "clientName",
+                                     "clientAddress",
+                                     "companyName",
+                                     "items",
+                                     "paymentDeadline",
+                                     "optionalMentions",
+                                     "scheduledDate",
+                                     "meanOfPayment",
+                                     "vatDetails"
+                                 ],
+                                 "properties": {
+                                     "id": {
+                                         "type": "string"
+                                     },
+                                     "number": {
+                                         "type": "string"
+                                     },
+                                     "date": {
+                                         "type": "string",
+                                         "format": "date-time"
+                                     },
+                                     "clientName": {
+                                         "type": "string"
+                                     },
+                                     "clientAddress": {
+                                         "type": "object",
+                                         "properties": {
+                                             "city": {
+                                                 "type": "string"
+                                             },
+                                             "postalCode": {
+                                                 "type": "string"
+                                             },
+                                             "country": {
+                                                 "type": "string"
+                                             },
+                                             "address": {
+                                                 "type": "string"
+                                             }
+                                         },
+                                         "required": [
+                                             "city",
+                                             "postalCode",
+                                             "country",
+                                             "address"
+                                         ]
+                                     },
+                                     "commercialCredit": {
+                                         "type": "boolean"
+                                     },
+                                     "companyName": {
+                                         "type": "string"
+                                     },
+                                     "companyAddress": {
+                                         "type": "object",
+                                         "properties": {
+                                             "city": {
+                                                 "type": "string"
+                                             },
+                                             "postalCode": {
+                                                 "type": "string"
+                                             },
+                                             "country": {
+                                                 "type": "string"
+                                             },
+                                             "address": {
+                                                 "type": "string"
+                                             }
+                                         },
+                                         "required": [
+                                             "city",
+                                             "postalCode",
+                                             "country",
+                                             "address"
+                                         ]
+                                     },
+                                     "items": {
+                                         "type": "array",
+                                         "items": {
+                                             "type": "object",
+                                             "properties": {
+                                                 "content": {
+                                                     "type": "string"
+                                                 },
+                                                 "price": {
+                                                     "type": "boolean"
+                                                 },
+                                                 "quantity": {
+                                                     "type": "integer"
+                                                 },
+                                                 "pricePerUnit": {
+                                                     "type": "string"
+                                                 },
+                                                 "priceWithTax": {
+                                                     "type": "string"
+                                                 },
+                                                 "taxRate": {
+                                                     "type": "string"
+                                                 },
+                                                 "subItems": {
+                                                     "type": "array",
+                                                     "items": {
+                                                         "type": "object",
+                                                         "properties": {
+                                                             "content": {
+                                                                 "type": "string"
+                                                             },
+                                                             "price": {
+                                                                 "type": "boolean"
+                                                             },
+                                                             "quantity": {
+                                                                 "oneOf": [
+                                                                     {
+                                                                         "type": "integer"
+                                                                     },
+                                                                     {
+                                                                         "type": "null"
+                                                                     }
+                                                                 ]
+                                                             },
+                                                             "pricePerUnit": {
+                                                                 "oneOf": [
+                                                                     {
+                                                                         "type": "string"
+                                                                     },
+                                                                     {
+                                                                         "type": "null"
+                                                                     }
+                                                                 ]
+                                                             },
+                                                             "priceWithTax": {
+                                                                 "oneOf": [
+                                                                     {
+                                                                         "type": "string"
+                                                                     },
+                                                                     {
+                                                                         "type": "null"
+                                                                     }
+                                                                 ]
+                                                             },
+                                                             "taxRate": {
+                                                                 "type": "string"
+                                                             }
+                                                         },
+                                                         "required": [
+                                                             "content",
+                                                             "quantity",
+                                                             "pricePerUnit",
+                                                             "priceWithTax",
+                                                             "taxRate"
+                                                         ]
+                                                     }
+                                                 }
+                                             },
+                                             "required": [
+                                                 "content",
+                                                 "quantity",
+                                                 "pricePerUnit",
+                                                 "priceWithTax",
+                                                 "taxRate",
+                                                 "subItems"
+                                             ]
+                                         },
+                                         "minItems": 1
+                                     },
+                                     "paymentDeadline": {
+                                         "oneOf": [
+                                             {
+                                                 "type": "string",
+                                                 "format": "date-time"
+                                             },
+                                             {
+                                                 "type": "null"
+                                             }
+                                         ]
+                                     },
+                                     "optionalMentions": {
+                                         "type": "string"
+                                     },
+                                     "scheduledDate": {
+                                         "type": "string",
+                                         "format": "date-time"
+                                     },
+                                     "meanOfPayment": {
+                                         "type": "string"
+                                     },
+                                     "templateUuid": {
+                                         "type": "string",
+                                         "pattern": "[0-9a-f]{8}\\b-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-\\b[0-9a-f]{12}"
+                                     },
+                                     "vatDetails": {
+                                         "$id": "#/properties/vatDetails",
+                                         "type": "array",
+                                         "title": "The Vatdetails Schema",
+                                         "items": {
+                                             "$id": "#/properties/vatDetails/items",
+                                             "type": "object",
+                                             "title": "The Items Schema",
+                                             "required": [
+                                                 "rate",
+                                                 "value"
+                                             ],
+                                             "properties": {
+                                                 "rate": {
+                                                     "type": "string"
+                                                 },
+                                                 "value": {
+                                                     "type": "string"
+                                                 }
+                                             }
+                                         }
+                                     }
+                                 }
+                             }'
+  PaymentScheduleJsonSchema: '{
+                                "definitions": {},
+                                "$schema": "http://json-schema.org/draft-07/schema#",
+                                "$id": "http://example.com/root.json",
+                                "type": "object",
+                                "title": "The Root Schema",
+                                "required": [
+                                  "bankAccount",
+                                  "bankName",
+                                  "packageName",
+                                  "payments",
+                                  "date",
+                                  "client",
+                                  "contractNumber"
+                                ],
+                                "properties": {
+                                  "bankAccount": {
+                                    "$id": "#/properties/bankAccount",
+                                    "type": "string",
+                                    "title": "The Bankaccount Schema",
+                                    "default": "",
+                                    "examples": [
+                                      "n/a"
+                                    ],
+                                    "pattern": "^(.*)$"
+                                  },
+                                  "bankName": {
+                                    "$id": "#/properties/bankName",
+                                    "type": "string",
+                                    "title": "The Bankname Schema",
+                                    "default": "",
+                                    "examples": [
+                                      "n/a"
+                                    ],
+                                    "pattern": "^(.*)$"
+                                  },
+                                  "packageName": {
+                                    "$id": "#/properties/packageName",
+                                    "type": "string",
+                                    "title": "The Packagename Schema",
+                                    "default": "",
+                                    "examples": [
+                                      "EXCELLENCE"
+                                    ],
+                                    "pattern": "^(.*)$"
+                                  },
+                                  "payments": {
+                                    "$id": "#/properties/payments",
+                                    "type": "array",
+                                    "title": "The Payments Schema",
+                                    "items": {
+                                      "$id": "#/properties/payments/items",
+                                      "type": "object",
+                                      "title": "The Items Schema",
+                                      "required": [
+                                        "date",
+                                        "discountAmount",
+                                        "dueAmount",
+                                        "label",
+                                        "paymentAmount"
+                                      ],
+                                      "properties": {
+                                        "date": {
+                                          "$id": "#/properties/payments/items/properties/date",
+                                          "type": "string",
+                                          "title": "The Date Schema",
+                                          "default": "",
+                                          "examples": [
+                                            "2019-03-28T00:00:00+01:00"
+                                          ],
+                                          "pattern": "^(.*)$"
+                                        },
+                                        "discountAmount": {
+                                          "$id": "#/properties/payments/items/properties/discountAmount",
+                                          "type": "string",
+                                          "title": "The Discountamount Schema",
+                                          "default": "",
+                                          "examples": [
+                                            "51.99"
+                                          ],
+                                          "pattern": "^(.*)$"
+                                        },
+                                        "dueAmount": {
+                                          "$id": "#/properties/payments/items/properties/dueAmount",
+                                          "type": "string",
+                                          "title": "The Dueamount Schema",
+                                          "default": "",
+                                          "examples": [
+                                            "0"
+                                          ],
+                                          "pattern": "^(.*)$"
+                                        },
+                                        "label": {
+                                          "$id": "#/properties/payments/items/properties/label",
+                                          "type": "null",
+                                          "title": "The Label Schema",
+                                          "default": null,
+                                          "examples": [
+                                            null
+                                          ]
+                                        },
+                                        "paymentAmount": {
+                                          "$id": "#/properties/payments/items/properties/paymentAmount",
+                                          "type": "string",
+                                          "title": "The Paymentamount Schema",
+                                          "default": "",
+                                          "examples": [
+                                            "51.99"
+                                          ],
+                                          "pattern": "^(.*)$"
+                                        }
+                                      }
+                                    }
+                                  },
+                                  "date": {
+                                    "$id": "#/properties/date",
+                                    "type": "string",
+                                    "title": "The Date Schema",
+                                    "default": "",
+                                    "examples": [
+                                      "2019-04-05T14:25:49+02:00"
+                                    ],
+                                    "pattern": "^(.*)$"
+                                  },
+                                  "client": {
+                                    "$id": "#/properties/client",
+                                    "type": "object",
+                                    "title": "The Client Schema",
+                                    "required": [
+                                      "name",
+                                      "firstName",
+                                      "lastName",
+                                      "invoiceAddress",
+                                      "clientAddress"
+                                    ],
+                                    "properties": {
+                                      "name": {
+                                        "$id": "#/properties/client/properties/name",
+                                        "type": "string",
+                                        "title": "The Name Schema",
+                                        "default": "",
+                                        "examples": [
+                                          "Mmi Eppi Meosi Cuisotxem"
+                                        ],
+                                        "pattern": "^(.*)$"
+                                      },
+                                      "firstName": {
+                                        "$id": "#/properties/client/properties/firstName",
+                                        "type": "string",
+                                        "title": "The Firstname Schema",
+                                        "default": "",
+                                        "examples": [
+                                          "Eppi Meosi"
+                                        ],
+                                        "pattern": "^(.*)$"
+                                      },
+                                      "lastName": {
+                                        "$id": "#/properties/client/properties/lastName",
+                                        "type": "string",
+                                        "title": "The Lastname Schema",
+                                        "default": "",
+                                        "examples": [
+                                          "Cuisotxem"
+                                        ],
+                                        "pattern": "^(.*)$"
+                                      },
+                                      "invoiceAddress": {
+                                        "$id": "#/properties/client/properties/invoiceAddress",
+                                        "type": "object",
+                                        "title": "The Invoiceaddress Schema",
+                                        "required": [
+                                          "name",
+                                          "address",
+                                          "countryCode",
+                                          "city",
+                                          "country",
+                                          "email",
+                                          "firstName",
+                                          "lastName",
+                                          "postalCode"
+                                        ],
+                                        "properties": {
+                                          "name": {
+                                            "$id": "#/properties/client/properties/invoiceAddress/properties/name",
+                                            "type": "string",
+                                            "title": "The Name Schema",
+                                            "default": "",
+                                            "examples": [
+                                              "EPPI MEOSI CUISOTXEM"
+                                            ],
+                                            "pattern": "^(.*)$"
+                                          },
+                                          "address": {
+                                            "$id": "#/properties/client/properties/invoiceAddress/properties/address",
+                                            "type": "null",
+                                            "title": "The Address Schema",
+                                            "default": null,
+                                            "examples": [
+                                              null
+                                            ]
+                                          },
+                                          "countryCode": {
+                                            "$id": "#/properties/client/properties/invoiceAddress/properties/countryCode",
+                                            "type": "string",
+                                            "title": "The Countrycode Schema",
+                                            "default": "",
+                                            "examples": [
+                                              "fr"
+                                            ],
+                                            "pattern": "^(.*)$"
+                                          },
+                                          "city": {
+                                            "$id": "#/properties/client/properties/invoiceAddress/properties/city",
+                                            "type": "string",
+                                            "title": "The City Schema",
+                                            "default": "",
+                                            "examples": [
+                                              "SURESNES"
+                                            ],
+                                            "pattern": "^(.*)$"
+                                          },
+                                          "country": {
+                                            "$id": "#/properties/client/properties/invoiceAddress/properties/country",
+                                            "type": "string",
+                                            "title": "The Country Schema",
+                                            "default": "",
+                                            "examples": [
+                                              "France"
+                                            ],
+                                            "pattern": "^(.*)$"
+                                          },
+                                          "email": {
+                                            "$id": "#/properties/client/properties/invoiceAddress/properties/email",
+                                            "type": "null",
+                                            "title": "The Email Schema",
+                                            "default": null,
+                                            "examples": [
+                                              null
+                                            ]
+                                          },
+                                          "firstName": {
+                                            "$id": "#/properties/client/properties/invoiceAddress/properties/firstName",
+                                            "type": "string",
+                                            "title": "The Firstname Schema",
+                                            "default": "",
+                                            "examples": [
+                                              ""
+                                            ],
+                                            "pattern": "^(.*)$"
+                                          },
+                                          "lastName": {
+                                            "$id": "#/properties/client/properties/invoiceAddress/properties/lastName",
+                                            "type": "string",
+                                            "title": "The Lastname Schema",
+                                            "default": "",
+                                            "examples": [
+                                              ""
+                                            ],
+                                            "pattern": "^(.*)$"
+                                          },
+                                          "postalCode": {
+                                            "$id": "#/properties/client/properties/invoiceAddress/properties/postalCode",
+                                            "type": "string",
+                                            "title": "The Postalcode Schema",
+                                            "default": "",
+                                            "examples": [
+                                              "92150"
+                                            ],
+                                            "pattern": "^(.*)$"
+                                          }
+                                        }
+                                      },
+                                      "clientAddress": {
+                                        "$id": "#/properties/client/properties/clientAddress",
+                                        "type": "object",
+                                        "title": "The Clientaddress Schema",
+                                        "required": [
+                                          "name",
+                                          "address",
+                                          "countryCode",
+                                          "city",
+                                          "country",
+                                          "email",
+                                          "firstName",
+                                          "lastName",
+                                          "postalCode"
+                                        ],
+                                        "properties": {
+                                          "name": {
+                                            "$id": "#/properties/client/properties/clientAddress/properties/name",
+                                            "type": "string",
+                                            "title": "The Name Schema",
+                                            "default": "",
+                                            "examples": [
+                                              "EPPI MEOSI CUISOTXEM"
+                                            ],
+                                            "pattern": "^(.*)$"
+                                          },
+                                          "address": {
+                                            "$id": "#/properties/client/properties/clientAddress/properties/address",
+                                            "type": "null",
+                                            "title": "The Address Schema",
+                                            "default": null,
+                                            "examples": [
+                                              null
+                                            ]
+                                          },
+                                          "countryCode": {
+                                            "$id": "#/properties/client/properties/clientAddress/properties/countryCode",
+                                            "type": "string",
+                                            "title": "The Countrycode Schema",
+                                            "default": "",
+                                            "examples": [
+                                              "fr"
+                                            ],
+                                            "pattern": "^(.*)$"
+                                          },
+                                          "city": {
+                                            "$id": "#/properties/client/properties/clientAddress/properties/city",
+                                            "type": "string",
+                                            "title": "The City Schema",
+                                            "default": "",
+                                            "examples": [
+                                              "SURESNES"
+                                            ],
+                                            "pattern": "^(.*)$"
+                                          },
+                                          "country": {
+                                            "$id": "#/properties/client/properties/clientAddress/properties/country",
+                                            "type": "string",
+                                            "title": "The Country Schema",
+                                            "default": "",
+                                            "examples": [
+                                              "France"
+                                            ],
+                                            "pattern": "^(.*)$"
+                                          },
+                                          "email": {
+                                            "$id": "#/properties/client/properties/clientAddress/properties/email",
+                                            "type": "null",
+                                            "title": "The Email Schema",
+                                            "default": null,
+                                            "examples": [
+                                              null
+                                            ]
+                                          },
+                                          "firstName": {
+                                            "$id": "#/properties/client/properties/clientAddress/properties/firstName",
+                                            "type": "string",
+                                            "title": "The Firstname Schema",
+                                            "default": "",
+                                            "examples": [
+                                              ""
+                                            ],
+                                            "pattern": "^(.*)$"
+                                          },
+                                          "lastName": {
+                                            "$id": "#/properties/client/properties/clientAddress/properties/lastName",
+                                            "type": "string",
+                                            "title": "The Lastname Schema",
+                                            "default": "",
+                                            "examples": [
+                                              ""
+                                            ],
+                                            "pattern": "^(.*)$"
+                                          },
+                                          "postalCode": {
+                                            "$id": "#/properties/client/properties/clientAddress/properties/postalCode",
+                                            "type": "string",
+                                            "title": "The Postalcode Schema",
+                                            "default": "",
+                                            "examples": [
+                                              "92150"
+                                            ],
+                                            "pattern": "^(.*)$"
+                                          }
+                                        }
+                                      }
+                                    }
+                                  },
+                                  "contractNumber": {
+                                    "$id": "#/properties/contractNumber",
+                                    "type": "string",
+                                    "title": "The Contractnumber Schema",
+                                    "default": "",
+                                    "examples": [
+                                      "4796874"
+                                    ],
+                                    "pattern": "^(.*)$"
+                                  }
+                                }
+                              }'
+
+App\Entity\JsonSchema:
+  json_schema_1:
+    creation: <dateTimeBetween('now','now')>
+    lastUpdate: <dateTimeBetween('now','now')>
+    name: 'MetaSchema'
+    __calls:
+      - setContent: [<{MetaJsonSchema}>]
+
+  json_schema_2:
+    creation: <dateTimeBetween('now','now')>
+    lastUpdate: <dateTimeBetween('now','now')>
+    name: 'HubsideInvoice'
+    __calls:
+      - setContent: [<{HubsideInvoiceJsonSchema}>]
+
+  json_schema_3:
+    creation: <dateTimeBetween('now','now')>
+    lastUpdate: <dateTimeBetween('now','now')>
+    name: 'PaymentSchedule'
+    __calls:
+    - setContent: [<{PaymentScheduleJsonSchema}>]
