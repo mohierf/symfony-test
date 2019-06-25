@@ -25,7 +25,7 @@ class JsonFieldController extends AbstractController
     private $logger;
 
     /**
-     * JsonSchemaService constructor.
+     * JsonFieldController constructor.
      *
      * @param LoggerInterface $logger
      */
@@ -38,12 +38,10 @@ class JsonFieldController extends AbstractController
      * @Route("/", name="json_field_index")
      * @param Request $request
      * @param JsonFieldRepository $json_fieldRepository
-     * @param SerializerInterface $serializer
      *
      * @return Response
      */
-    public function index(Request $request,
-                          JsonFieldRepository $json_fieldRepository)
+    public function index(Request $request, JsonFieldRepository $json_fieldRepository)
     {
         $jsonSchemaRepository = $this->getDoctrine()->getRepository(JsonSchema::class);
 
@@ -57,20 +55,20 @@ class JsonFieldController extends AbstractController
             $json_schemas[] = $required_schema_name;
         }
 
-        $json_fields = [];
+        $jsonFields = [];
         if (! empty($request->query->get('schema'))) {
             $schema = $jsonSchemaRepository->findOneBy(['name' => $required_schema_name]);
             $this->logger->info("Schema: " . $schema->getName());
             if ($schema) {
-                $json_fields = $schema->getJsonFields();
+                $jsonFields = $schema->getJsonFields();
             }
         } else {
-            $json_fields = $json_fieldRepository->findAll();
+            $jsonFields = $json_fieldRepository->findAll();
         }
 
         // Create a string array to configure the JsTree
         $jsonContent = [];
-        foreach ($json_fields as $field) {
+        foreach ($jsonFields as $field) {
             $this->logger->info("*** ->: " . $field->getName());
 
             // The text field is displayed on the UI
@@ -79,6 +77,7 @@ class JsonFieldController extends AbstractController
             $new_field['text'] = $field->getName();
             $new_field['type'] = $field->getType();
             $new_field['format'] = $field->getFormat();
+            $new_field['pattern'] = $field->getPattern();
             $new_field['parent'] = '#';
             if ($field->getParent()) {
                 $new_field['parent'] = (string)$field->getParent()->getId();
@@ -89,10 +88,11 @@ class JsonFieldController extends AbstractController
         }
 
         return $this->render('json_field/index.html.twig', [
+            'itemType' => 'json_field',
             'controller_name' => 'JsonFieldController',
             'json_schema' => $required_schema_name,
             'json_schemas' => $json_schemas,
-            'items' => $json_fields,
+            'items' => $jsonFields,
             'json_content' => json_encode($jsonContent),
         ]);
     }
@@ -104,11 +104,11 @@ class JsonFieldController extends AbstractController
      */
     public function new(Request $request): Response
     {
-        $required_schema_name = $request->query->get('schema');
-        $this->logger->info("Required schema: " . $required_schema_name);
+        $required_schema = $request->query->get('schema');
+        $this->logger->warning("Required schema: " . $required_schema);
 
         $required_parent = $request->query->get('parent');
-        $this->logger->info("Required parent: " . $required_schema_name);
+        $this->logger->info("Required parent: " . $required_schema);
 
         $json_field = new JsonField();
         $form = $this->createForm(JsonFieldType::class, $json_field);
@@ -119,13 +119,16 @@ class JsonFieldController extends AbstractController
             $em->flush();
             $this->addFlash('success', 'New field created');
 
+            if (! empty($required_schema)) {
+                return $this->redirectToRoute('json_schema_edit', ['id' => $required_schema]);
+            }
             return $this->redirectToRoute('json_field_index');
         }
 
         return $this->render(
             'json_field/new.html.twig',
             [
-                'schema_id' => $required_schema_name,
+                'schema_id' => $required_schema,
                 'parent_id' => $required_parent,
                 'json_field' => $json_field,
                 'form' => $form->createView(),
@@ -186,13 +189,20 @@ class JsonFieldController extends AbstractController
      */
     public function edit(Request $request, JsonField $json_field, LoggerInterface $logger): Response
     {
+        $required_schema = $request->query->get('schema');
+        $this->logger->warning("Required schema: " . $required_schema);
+
         $logger->info("Edit a json_field");
         $form = $this->createForm(JsonFieldType::class, $json_field);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
             $this->getDoctrine()->getManager()->flush();
+            $this->addFlash('success', 'Field updated');
 
+            if (! empty($required_schema)) {
+                return $this->redirectToRoute('json_schema_edit', ['id' => $required_schema]);
+            }
             return $this->redirectToRoute('json_field_index', ['id' => $json_field->getId()]);
         }
 

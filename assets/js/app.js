@@ -18,7 +18,7 @@ require('@fortawesome/fontawesome-free/css/all.min.css');
 
 
 // jsTree
-require('jstree/dist/themes/default-dark/style.min.css');
+// require('jstree/dist/themes/default-dark/style.min.css');
 require('jstree/dist/jstree.min.js');
 
 $(document).ready(function() {

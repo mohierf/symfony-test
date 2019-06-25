@@ -13,6 +13,10 @@ use Psr\Log\LoggerInterface;
 
 /**
  * @ApiResource()
+ * @ORM\Table(name="json_field",
+ *     uniqueConstraints={
+ *          @ORM\UniqueConstraint(name="field_idx", columns={"json_schema_id","name"})
+ *     }))
  * @ORM\Entity(repositoryClass="App\Repository\JsonFieldRepository")
  * @ORM\HasLifecycleCallbacks()
  */
@@ -27,6 +31,21 @@ class JsonField
      * @ORM\Column(type="integer")
      */
     private $id;
+
+    /**
+     * @ORM\Column(type="integer")
+     */
+    private $level = 0;
+
+    /**
+     * @ORM\Column(type="boolean")
+     */
+    private $required = true;
+
+    /**
+     * @ORM\Column(type="boolean")
+     */
+    private $nullable = false;
 
     /**
      * @ORM\Column(type="string", length=255)
@@ -44,7 +63,12 @@ class JsonField
     private $format = '';
 
     /**
-     * @ORM\ManyToOne(targetEntity="App\Entity\JsonField", inversedBy="jsonFields")
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private $pattern = '';
+
+    /**
+     * @ORM\ManyToOne(targetEntity="App\Entity\JsonField", inversedBy="jsonFields",cascade={"persist"})
      */
     private $parent;
 
@@ -59,23 +83,60 @@ class JsonField
      */
     private $jsonSchema;
 
-    /**
-     * @ORM\Column(type="boolean")
-     */
-    private $required = true;
+    public $group = '';
 
     public function __construct()
     {
         $this->jsonFields = new ArrayCollection();
     }
 
+    /**
+     * When dumped as a string, returns a string formed with: schema name and field name
+     * @return string
+     */
     public function __toString() {
-        return $this->name . "(" . $this->id . ")";
+        return $this->jsonSchema. " - " . $this->name;
     }
 
     public function getId(): ?int
     {
         return $this->id;
+    }
+
+    public function getLevel(): ?string
+    {
+        return $this->level;
+    }
+
+    public function setLevel(string $level): self
+    {
+        $this->level = $level;
+
+        return $this;
+    }
+
+    public function getRequired(): ?bool
+    {
+        return $this->required;
+    }
+
+    public function setRequired(bool $required): self
+    {
+        $this->required = $required;
+
+        return $this;
+    }
+
+    public function getNullable(): ?bool
+    {
+        return $this->nullable;
+    }
+
+    public function setNullable(bool $nullable): self
+    {
+        $this->nullable = $nullable;
+
+        return $this;
     }
 
     public function getName(): ?string
@@ -110,6 +171,18 @@ class JsonField
     public function setFormat(?string $format): self
     {
         $this->format = $format;
+
+        return $this;
+    }
+
+    public function getPattern(): ?string
+    {
+        return $this->pattern;
+    }
+
+    public function setPattern(?string $pattern): self
+    {
+        $this->pattern = $pattern;
 
         return $this;
     }
@@ -190,16 +263,5 @@ class JsonField
         return $my_clone;
     }
 
-    public function getRequired(): ?bool
-    {
-        return $this->required;
-    }
-
-    public function setRequired(bool $required): self
-    {
-        $this->required = $required;
-
-        return $this;
-    }
 
 }

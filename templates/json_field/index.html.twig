@@ -1,91 +1,51 @@
 {% extends 'layout.html.twig' %}
 
-{% block title %}Hello {{ controller_name }}!{% endblock %}
+{% set itemType = itemType|default('json_field') %}
+
+{% set pageTitle = itemType ~ '.list' %}
+{% set pageSubTitle = 'Gestion des champs Json' %}
 
 {% block wrapper %}
     <style>
         .row { margin: 1em auto; }
     </style>
 
-    <h1>Hello {{ controller_name }}!</h1>
+    <h1>Json fields</h1>
 
-    <a class="btn btn-primary" href="{{ path('json_field_new') }}">{{ 'Create new'|trans }}</a>
+    <a class="btn btn-primary" href="{{ path(itemType ~ '_new') }}">{{ 'action.new'|trans }}</a>
 
-    <div class="row" style="height: 10vh">
-        <div class="row">
-            <div class="col-md-3">
+    <div class="row" style="height: 200px; overflow: hidden">
+        <div class="card col-md-3">
+            <h4>Json schemas</h4>
+            <div class="card-body">
+            <ul class="list-group list-group-horizontal">
                 {% for item in json_schemas %}
-                    {{ item.getName() }}
+                    <li class="list-group-item">
+                        <a class="btn btn-warning" href="{{ path('json_schema_edit', {'id': item.id}) }}">{{ 'Edit'|trans }}</a>
+
+                        {{ item.getName() }}
+                    </li>
                 {% else %}
-                    <tr>
-                        <td colspan="6">{{ 'No schemas'|trans }}</td>
-                    </tr>
+                    <li class="list-group-item">{{ 'No schemas'|trans }}</li>
                 {% endfor %}
+            </ul>
             </div>
-            <div class="col-md-9" id="json_content" style="height: 10vh">{{ json_content }}</div>
+        </div>
+        <div class="card col-md-9" style="height: 30vh">
+            <h4>Json content</h4>
+            <div class="card-body" id="json_content">
+            {{ json_content }}
+            </div>
         </div>
     </div>
     <div class="row">
-        <div class="col-md-3" id="json_tree">
+        <div class="card card-default col-md-3">
+            <div class="card-body">
+                <div id="json_tree"></div>
+            </div>
         </div>
-        <div class="col-md-9 table-responsive">
-            <table class="table table-sm table-hover">
-                <caption>List of Json fields</caption>
-                <thead class="thead-dark">
-                <tr>
-                    <th scope="col">Id</th>
-                    <th scope="col">{{ 'schema'|trans }}</th>
-                    <th scope="col">{{ 'name'|trans }}</th>
-                    <th scope="col">{{ 'required'|trans }}</th>
-                    <th scope="col">{{ 'type'|trans }}</th>
-                    <th scope="col">{{ 'format'|trans }}</th>
-                    <th scope="col">{{ 'parent'|trans }}</th>
-                    <th scope="col">{{ 'children'|trans }}</th>
-                    <th scope="col">{{ 'Actions'|trans }}</th>
-                </tr>
-                </thead>
-                <tbody>
-                {% for item in items %}
-                    <tr>
-                        <th scope="row">{{ item.id }}</th>
-                        <td>{{ item.getJsonSchema() }}</td>
-                        <td>{{ item.getName() }}</td>
-                        <td>
-                            {% if item.getRequired() %}
-                            {{ '<i class="fa fa-check"></i>' }}
-                            {% endif %}
-                        </td>
-                        <td>{{ item.getType() }}</td>
-                        <td>{{ item.getFormat() }}</td>
-                        <td>{{ item.getParent() }}</td>
-                        <td>
-                            {% for child in item.getJsonFields() %}
-                                {{ child.getName() }}
-                            {% else %}
-                                {{ '-/-'|trans }}
-                            {% endfor %}
-                        </td>
-
-                        <td>
-                            {# <a class="btn btn-light" href="{{ path('json_field_show', {'id': item.id}) }}" #}
-                            {# title="{{ 'action.preview'|trans }}"><i class="fa fa-eye"></i></a>#}
-                            <a class="btn btn-sm btn-primary" href="{{ path('json_field_edit', {'id': item.id}) }}"
-                               title="{{ 'action.edit'|trans }}"><i class="fa fa-edit"></i></a>
-                            {{ include('json_field/_delete_form.html.twig', {'json_field': item}) }}
-                            {% if item.getType() == 'object' %}
-                                <a class="btn btn-sm btn-warning"
-                                   href="{{ path('json_field_new', {'schema': item.getJsonSchema().id, 'parent': item.id}) }}"
-                                   title="{{ 'action.new'|trans }}"><i class="fa fa-plus"></i></a>
-                            {% endif %}
-                        </td>
-                    </tr>
-                {% else %}
-                    <tr>
-                        <td colspan="6">{{ 'no records found'|trans }}</td>
-                    </tr>
-                {% endfor %}
-                </tbody>
-            </table>
+        <div class="card card-default col-md-9">
+            {{ include(itemType ~ '/_table.html.twig') }}
         </div>
     </div>
 {% endblock %}
@@ -97,7 +57,6 @@
 
             var json = $('#json_content').text();
             json = JSON.parse(json);
-            console.log(json);
 
             var json1 = [
                 {"id":1,"text":"Root node","children":[{"id":2,"text":"Child node 1"},{"id":3,"text":"Child node 2"}]}
@@ -116,15 +75,15 @@
                         "check_callback" : true,   // Allow to change the tree
                         "data" : json
                     },
-                    "plugins" : [
-                        "state", "sort"
-                    ],
-                    "state": {
-                        "key": "json_tree",
-                        "filter": function(state) {
-                            console.log('Restoring saved state: ', state);
-                        }
-                    }
+                    // "plugins" : [
+                    //     "state", "sort"
+                    // ],
+                    // "state": {
+                    //     "key": "json_tree",
+                    //     "filter": function(state) {
+                    //         console.log('Restoring saved state: ', state);
+                    //     }
+                    // }
                 })
                 .bind('ready.jstree', function(e, data) {
                     var o_json_tree = $("#json_tree").jstree(true);

@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Entity\JsonField;
 use App\Entity\JsonSchema;
+use Doctrine\ORM\EntityManagerInterface;
 use JsonSchema\Exception\InvalidSchemaException;
 use JsonSchema\Validator;
 use Psr\Log\LoggerInterface;
@@ -16,6 +17,11 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 class JsonSchemaService
 {
     /**
+     * @var EntityManagerInterface
+     */
+    private $em;
+
+    /**
      * @var LoggerInterface
      */
     private $logger;
@@ -24,10 +30,12 @@ class JsonSchemaService
      * JsonSchemaService constructor.
      *
      * @param LoggerInterface $logger
+     * @param EntityManagerInterface $em
      */
-    public function __construct(LoggerInterface $logger)
+    public function __construct(LoggerInterface $logger, EntityManagerInterface $em)
     {
         $this->logger = $logger;
+        $this->em = $em;
     }
 
     /**
@@ -67,8 +75,9 @@ class JsonSchemaService
     public function getFieldsFromSchema(JsonSchema $jsonSchema): array
     {
         $fields = [];
-        $this->logger->info("Get fields from schema: " . $jsonSchema->getName());
-        $this->_initializeFields($jsonSchema->getContent(), $fields);
+        $this->logger->info("Get the Json fields from: " . $jsonSchema->getName());
+        $this->_initializeFields($jsonSchema, $jsonSchema->getContent(), $fields);
+        $this->logger->info("Got: " . count($fields) . " fields.");
 
         return $fields;
     }
@@ -76,66 +85,191 @@ class JsonSchemaService
     /**
      * Extract fields from a Json Schema.
      *
-     * @param        $object
-     * @param        $fields
-     * @param int    $level
-     * @param string $parent
-     * @param string $prefix
+     * @param JsonSchema $jsonSchema
+     * @param            $object
+     * @param            $fields
+     * @param int        $level
+     * @param JsonField  $parent
+     * @param string     $prefix
      *
      * @return array
      */
-    private function _initializeFields($object, &$fields, $level = 0, $parent = '#', string $prefix = ''): array
+    private function _initializeFields($jsonSchema, $object, &$fields, $level = 0, $parent = null, string $prefix = ''): array
     {
         $object = $object instanceof stdClass ? $object : json_decode($object);
+
+        $jsonFieldRepository = $this->em->getRepository(JsonField::class);
+
         $flat = [];
         $separator = '_';
 
         foreach ($object->properties as $key => $value) {
-            $this->logger->info($level . '/' . $parent . ' -> ' . $key . ", value: " . serialize($value));
-
             $jsField = new JsonField();
-            $jsField->setId($key);
-            $jsField->setLevel($level);
+            $jsField->setJsonSchema($jsonSchema);
             $jsField->setName($key);
-            $jsField->setParent($parent);
+            if ($prefix) {
+                $jsField->setName($prefix . $separator . $key);
+            }
+            $stillExisting = false;
+            if($currentField = $jsonFieldRepository->findOneBy(['name' => $jsField->getName(), 'jsonSchema' => $jsonSchema->getId()])) {
+                $stillExisting = true;
+            }
+            if (isset($value->format)) {
+                $jsField->setFormat($value->format);
+            }
+            if (isset($value->pattern)) {
+                $jsField->setPattern($value->pattern);
+            }
+            $jsField->setLevel($level);
+            if ($parent) {
+                $this->logger->info("- set parent as: " . $parent);
+                $parent->addJsonField($jsField);
+            }
+            $this->logger->info($jsField->getName() . '/' . $level . ' <-' . $parent . ', exists: ' . $stillExisting . ', ' . $currentField . ', prefix: ' . $prefix);
 
             if (isset($value->type)) {
-                $this->logger->info($key . ", type: " . $value->type);
                 $type = $value->type;
                 $jsField->setType($type);
 
                 if ('array' === $type) {
-                    // Complex type: array
-                    $this->_initializeFields($value->items, $fields, $level + 1, $parent, $key);
-                } elseif ('object' === $type) {
-                    if ('#' === $parent) {
-                        $prefix .= $separator.$key;
-                        $this->_initializeFields($value, $fields, $level + 1, $prefix, $prefix);
+                    $this->logger->info(" is of type: " . $value->type);
+                    if (! $stillExisting) {
+                        $this->em->persist($jsField);
                     } else {
-                        $prefix = $parent.'_'.$key;
-                        $this->_initializeFields($value, $fields, $level + 1, $key, $prefix);
+                        $this->em->flush();
+                    }
+
+                    // Complex type: array
+                    $this->_initializeFields($jsonSchema, $value->items, $fields, $level + 1, $jsField, $jsField->getName());
+                } elseif ('object' === $type) {
+                    $this->logger->info(" is of type: " . $value->type);
+                    if (! $stillExisting) {
+                        $this->em->persist($jsField);
+                    } else {
+                        $this->em->flush();
+                    }
+
+                    if ('#' === $parent) {
+                        // A root element
+                        $this->_initializeFields($jsonSchema, $value, $fields, $level + 1, $jsField, $jsField->getName());
+                    } else {
+                        $this->_initializeFields($jsonSchema, $value, $fields, $level + 1, $jsField, $jsField->getName());
                     }
                     $prefix = '';
-                } else {
-                    $jsField->setValue($value);
-
-                    $key = ltrim($prefix.$separator.$key, $separator);
-                    $fields[$key] = $jsField;
                 }
             } elseif (isset($value->oneOf)) {
-                $this->logger->info($key . ", type: oneOf");
-                $jsField->setType('oneOf');
-                $jsField->setValue($value);
-
-                $key = ltrim($prefix.$separator.$key, $separator);
-                $fields[$key] = $jsField;
+                $this->logger->info($key . " is of type oneOf, " . serialize($value->oneOf));
+                $jsField->setNullable(true);
+                if (count($value->oneOf) > 1) {
+                    if (isset($value->oneOf[0]->type)) {
+                        $jsField->setType($value->oneOf[0]->type);
+                    }
+                    if (isset($value->oneOf[0]->format)) {
+                        $jsField->setType($value->oneOf[0]->format);
+                    }
+                    $this->logger->info($key . ", type: oneOf, " . serialize($jsField));
+                }
             }
 
-            $this->logger->info($key . ", jsField: " . $jsField);
+            if (! $stillExisting) {
+                $this->logger->info(' creating ' . $jsField . '...');
+                $this->em->persist($jsField);
+            } else {
+                $this->logger->info(' updating ' . $jsField . '...');
+                $this->em->flush();
+            }
+            $fields[$jsField->getName()] = $jsField;
         }
+        $this->logger->info("Level $level, got: " . count($fields) . " fields.");
+        $this->em->flush();
 
         return $flat;
     }
+
+    /**
+     * @param array $jsonFields
+     *
+     * @param string $description
+     * @return array
+     */
+    public function getJsonFromFields(array $jsonFields, string $description = ""): array
+    {
+        $jsonContent = [];
+        $this->logger->warning("Build the schema from ");
+        $this->logger->warning("Build the schema from ". count($jsonFields) . " fields");
+
+        $jsonContent["description"] = $description;
+        $jsonContent["type"] = "object";
+        $required = [];
+        $jsonContent["properties"] = $this->_jsonFromFields($jsonFields, $required);
+        $jsonContent["required"] = $required;
+
+        $this->logger->warning("Got: " . count($jsonContent) . " rows.");
+        $this->logger->warning("Got: " . serialize($required) . " required.");
+
+        return $jsonContent;
+    }
+
+    private function _jsonFromFields($jsonFields, &$required, $level = 0): array
+    {
+        $flat = [];
+        $this->logger->warning("*$level* ->: " . count($jsonFields));
+
+        // Create a string array to configure the JsTree
+        foreach ($jsonFields as $field) {
+            if ($field->getLevel() != $level) {
+                continue;
+            }
+            $this->logger->warning("*$level* ->: " . $field->getName());
+
+            if ($field->getRequired()) {
+                $required[] = $field->getName();
+            }
+
+            $newField = [];
+            if ($field->getType() === 'object') {
+                $fieldContent = [];
+                $fieldContent["type"] = $field->getType();
+                $fieldContent["required"] = [];
+
+                $this->logger->warning("*$level* ->: down for: " . count($field->getJsonFields()));
+
+                $fieldContent["properties"] = $this->_jsonFromFields($field->getJsonFields(), $jsonContent, $level + 1);
+
+                $newField[$field->getName()] = $fieldContent;
+            } elseif ($field->getType() === 'array') {
+                $fieldContent = [];
+                $fieldContent["type"] = $field->getType();
+//                $field_content["required"] = [];
+                $fieldContent["items"] = $this->_jsonFromFields($field->getJsonFields(), $jsonContent, $level + 1);
+
+                $newField[$field->getName()] = $fieldContent;
+            } else {
+                $fieldContent = [];
+                $fieldContent["type"] = $field->getType();
+                if ($field->getFormat()) {
+                    $fieldContent["format"] = $field->getFormat();
+                }
+                if ($field->getPattern()) {
+                    $fieldContent["pattern"] = $field->getPattern();
+                }
+
+                $newField[$field->getName()] = $fieldContent;
+            }
+
+            $jsonContent[] = $newField;
+            $flat[] = $newField;
+
+            $this->logger->warning("*** ->: " . json_encode($newField));
+//            $this->logger->warning("*** ->: " . json_encode($flat));
+        }
+
+        $this->logger->warning("Got: " . count($flat) . " fields.");
+        $this->logger->warning("Required: " . count($required) . " required fields.");
+
+        return $flat;
+    }
+
 
     /**
      * @param JsonSchema $jsonSchema

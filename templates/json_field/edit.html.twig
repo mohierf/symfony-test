@@ -1,10 +1,11 @@
 {% extends 'layout.html.twig' %}
 
-{% set pageTitle = 'json_field.edit' %}
+{% set itemType = itemType|default('json_field') %}
+
+{% set pageTitle = itemType ~ '.edit' %}
 {% set pageSubTitle = 'json_field.subtitle' %}
 
 {% block wrapper %}
-
     <div class="row">
         <div class="col-md-8">
             <!-- START card-->

@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Entity\JsonField;
 use App\Entity\JsonSchema;
 use App\Entity\Template;
 use App\Form\JsonSchemaType;
@@ -29,13 +30,21 @@ class JsonSchemaController extends AbstractController
     private $jsonSchemaRepository;
 
     /**
+     * @var JsonSchemaService
+     */
+    private $jsonSchemaService;
+
+    /**
      * JsonSchemaController constructor.
      *
      * @param JsonSchemaRepository $jsonSchemaRepository
+     * @param JsonSchemaService $jsonSchemaService
      */
-    public function __construct(JsonSchemaRepository $jsonSchemaRepository)
+    public function __construct(JsonSchemaRepository $jsonSchemaRepository,
+                                JsonSchemaService $jsonSchemaService)
     {
         $this->jsonSchemaRepository = $jsonSchemaRepository;
+        $this->jsonSchemaService = $jsonSchemaService;
     }
 
     /**
@@ -74,6 +83,7 @@ class JsonSchemaController extends AbstractController
             $em = $this->getDoctrine()->getManager();
             $em->remove($jsonSchema);
             $em->flush();
+            $this->addFlash('success', 'Schema deleted');
         }
 
         return $this->redirectToRoute('json_schema_index');
@@ -82,46 +92,71 @@ class JsonSchemaController extends AbstractController
     /**
      * @Route("/{id}/edit", name="json_schema_edit", methods="GET|POST")
      *
-     * @param Request    $request
+     * @param Request $request
      * @param JsonSchema $jsonSchema
      *
      * @return Response
      */
-    public function edit(Request $request, JsonSchema $jsonSchema, JsonSchemaService $schemaService, LoggerInterface $logger): Response
+    public function edit(Request $request, JsonSchema $jsonSchema): Response
     {
-        // this returns a single item
-        $metaSchema = $this->jsonSchemaRepository->find(1);
-
         $form = $this->createForm(JsonSchemaType::class, $jsonSchema);
         $form->handleRequest($request);
 
-        if ($form->isSubmitted() && $form->isValid()) {
-            $this->getDoctrine()->getManager()->flush();
+        /** @var JsonSchema $metaSchema
+        Get the JSON meta schema for validating the schemas, name = MetaSchema
+         */
+        $metaSchema = $this->jsonSchemaRepository->findOneBy(['name' => "MetaSchema"]);
 
-            return $this->redirectToRoute('json_schema_index', ['id' => $jsonSchema->getId()]);
-        }
-
-        /* Validate the Json according to the Json meta schema */
+        // Validate the Json according to the Json meta schema
         try {
-            $schemaService->validate($jsonSchema->getContent(), $metaSchema);
+            $this->jsonSchemaService->validate($jsonSchema->getContent(), $metaSchema);
+            $this->addFlash('success', 'Schema is a valid Json schema.');
+
+            if ($form->isSubmitted() && $form->isValid()) {
+                $this->getDoctrine()->getManager()->flush();
+                $this->addFlash('success', 'Schema updated.');
+
+                return $this->redirectToRoute('json_schema_index', ['id' => $jsonSchema->getId()]);
+            }
         } catch (InvalidSchemaException $e) {
             return new JsonResponse(['message' => sprintf('Invalid schema. JSON does not validate due to violations : %s', $e->getMessage())], JsonResponse::HTTP_BAD_REQUEST);
         }
 
-        $json_list = $schemaService->getFieldsFromSchema($jsonSchema);
-//        $json_list = $schemaService->getPlaceholdersFromSchema($jsonSchema);
+        // Build and get the Json fields from a schema
+        $jsonFields = $this->jsonSchemaService->getFieldsFromSchema($jsonSchema);
 
+        // Build the Json from a Json fields list
+        $jsonText = $this->jsonSchemaService->getJsonFromFields($jsonFields, $jsonSchema->getName());
+
+        // Get the editable fields
+        $jsonFieldRepository = $this->getDoctrine()->getRepository(JsonField::class);
+        $jsonFields = $jsonFieldRepository->findBy(['jsonSchema' => $jsonSchema->getId()]);
 
         return $this->render(
             'json_schema/edit.html.twig',
             [
                 'meta_schema_name' => $metaSchema->getName(),
                 'meta_schema' => $metaSchema->getContent(),
+                'json_text' => json_encode($jsonText),
                 'json_schema' => $jsonSchema,
-                'json_schema_list' => $json_list,
+                'json_schema_fields' => $jsonFields,
                 'form' => $form->createView(),
             ]
         );
+    }
+
+    /**
+     * @Route("/{id}/validate", name="json_schema_validate", methods="GET")
+     *
+     * A simple redirect to the edition route will provoke a Schema validation.
+     *
+     * @param JsonSchema $jsonSchema
+     *
+     * @return Response
+     */
+    public function validate(JsonSchema $jsonSchema): Response
+    {
+        return $this->redirectToRoute('json_schema_edit', ['id' => $jsonSchema->getId()]);
     }
 
     /**
