@@ -43,16 +43,23 @@ class JsonFieldController extends AbstractController
      * @return Response
      */
     public function index(Request $request,
-                          JsonFieldRepository $json_fieldRepository,
-                          SerializerInterface $serializer)
+                          JsonFieldRepository $json_fieldRepository)
     {
+        $jsonSchemaRepository = $this->getDoctrine()->getRepository(JsonSchema::class);
+
         $required_schema_name = $request->query->get('schema');
         $this->logger->info("Required schema: " . $required_schema_name);
 
+        $json_schemas = [];
+        if (empty($request->query->get('schema'))) {
+            $json_schemas = $jsonSchemaRepository->findAll();
+        } else {
+            $json_schemas[] = $required_schema_name;
+        }
+
         $json_fields = [];
         if (! empty($request->query->get('schema'))) {
-            $repository = $this->getDoctrine()->getRepository(JsonSchema::class);
-            $schema = $repository->findOneBy(['name' => $required_schema_name]);
+            $schema = $jsonSchemaRepository->findOneBy(['name' => $required_schema_name]);
             $this->logger->info("Schema: " . $schema->getName());
             if ($schema) {
                 $json_fields = $schema->getJsonFields();
@@ -83,6 +90,8 @@ class JsonFieldController extends AbstractController
 
         return $this->render('json_field/index.html.twig', [
             'controller_name' => 'JsonFieldController',
+            'json_schema' => $required_schema_name,
+            'json_schemas' => $json_schemas,
             'items' => $json_fields,
             'json_content' => json_encode($jsonContent),
         ]);
@@ -95,6 +104,12 @@ class JsonFieldController extends AbstractController
      */
     public function new(Request $request): Response
     {
+        $required_schema_name = $request->query->get('schema');
+        $this->logger->info("Required schema: " . $required_schema_name);
+
+        $required_parent = $request->query->get('parent');
+        $this->logger->info("Required parent: " . $required_schema_name);
+
         $json_field = new JsonField();
         $form = $this->createForm(JsonFieldType::class, $json_field);
         $form->handleRequest($request);
@@ -102,6 +117,7 @@ class JsonFieldController extends AbstractController
             $em = $this->getDoctrine()->getManager();
             $em->persist($json_field);
             $em->flush();
+            $this->addFlash('success', 'New field created');
 
             return $this->redirectToRoute('json_field_index');
         }
@@ -109,6 +125,8 @@ class JsonFieldController extends AbstractController
         return $this->render(
             'json_field/new.html.twig',
             [
+                'schema_id' => $required_schema_name,
+                'parent_id' => $required_parent,
                 'json_field' => $json_field,
                 'form' => $form->createView(),
             ]
@@ -131,6 +149,8 @@ class JsonFieldController extends AbstractController
                 $em = $this->getDoctrine()->getManager();
                 $em->remove($json_field);
                 $em->flush();
+                $this->addFlash('success', 'Field deleted');
+
             } catch (ForeignKeyConstraintViolationException $exp) {
                 $this->addFlash(
                     'danger',

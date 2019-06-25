@@ -17,3 +17,19 @@
         </div>
     </div>
 {% endblock %}
+
+{% block javascripts %}
+    <script type="text/javascript">
+      $(document).ready(function(){
+        console.log("New Json field!");
+
+        var required_schema = '{{ schema_id }}';
+        console.log("{{ schema_id }}");
+        $('#json_field_jsonSchema').val(required_schema);
+
+        var required_parent = '{{ parent_id }}';
+        console.log("{{ parent_id }}");
+        $('#json_field_parent').val(required_parent);
+      });
+    </script>
+{% endblock %}

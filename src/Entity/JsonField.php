@@ -3,17 +3,24 @@
 namespace App\Entity;
 
 use ApiPlatform\Core\Annotation\ApiResource;
+use App\Entity\Traits\IdTrait;
+use App\Entity\Traits\TimestampTrait;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use phpDocumentor\Reflection\Types\Boolean;
 use Psr\Log\LoggerInterface;
 
 /**
  * @ApiResource()
  * @ORM\Entity(repositoryClass="App\Repository\JsonFieldRepository")
+ * @ORM\HasLifecycleCallbacks()
  */
 class JsonField
 {
+    use IdTrait;
+    use TimestampTrait;
+
     /**
      * @ORM\Id()
      * @ORM\GeneratedValue()
@@ -52,13 +59,18 @@ class JsonField
      */
     private $jsonSchema;
 
+    /**
+     * @ORM\Column(type="boolean")
+     */
+    private $required = true;
+
     public function __construct()
     {
         $this->jsonFields = new ArrayCollection();
     }
 
     public function __toString() {
-        return $this->name . "[" . $this->id . "]";
+        return $this->name . "(" . $this->id . ")";
     }
 
     public function getId(): ?int
@@ -176,6 +188,18 @@ class JsonField
         }
 
         return $my_clone;
+    }
+
+    public function getRequired(): ?bool
+    {
+        return $this->required;
+    }
+
+    public function setRequired(bool $required): self
+    {
+        $this->required = $required;
+
+        return $this;
     }
 
 }

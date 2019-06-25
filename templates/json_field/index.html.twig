@@ -9,20 +9,26 @@
 
     <h1>Hello {{ controller_name }}!</h1>
 
-
-    <h1>Inline data demo</h1>
-    <div id="data" class="demo"></div>
-
-
     <a class="btn btn-primary" href="{{ path('json_field_new') }}">{{ 'Create new'|trans }}</a>
 
     <div class="row" style="height: 10vh">
-        <div class="row" id="json_content" style="height: 10vh">{{ json_content }}</div>
+        <div class="row">
+            <div class="col-md-3">
+                {% for item in json_schemas %}
+                    {{ item.getName() }}
+                {% else %}
+                    <tr>
+                        <td colspan="6">{{ 'No schemas'|trans }}</td>
+                    </tr>
+                {% endfor %}
+            </div>
+            <div class="col-md-9" id="json_content" style="height: 10vh">{{ json_content }}</div>
+        </div>
     </div>
     <div class="row">
-        <div class="col-md-6" id="json_tree">
+        <div class="col-md-3" id="json_tree">
         </div>
-        <div class="col-md-6 table-responsive">
+        <div class="col-md-9 table-responsive">
             <table class="table table-sm table-hover">
                 <caption>List of Json fields</caption>
                 <thead class="thead-dark">
@@ -30,6 +36,7 @@
                     <th scope="col">Id</th>
                     <th scope="col">{{ 'schema'|trans }}</th>
                     <th scope="col">{{ 'name'|trans }}</th>
+                    <th scope="col">{{ 'required'|trans }}</th>
                     <th scope="col">{{ 'type'|trans }}</th>
                     <th scope="col">{{ 'format'|trans }}</th>
                     <th scope="col">{{ 'parent'|trans }}</th>
@@ -43,6 +50,11 @@
                         <th scope="row">{{ item.id }}</th>
                         <td>{{ item.getJsonSchema() }}</td>
                         <td>{{ item.getName() }}</td>
+                        <td>
+                            {% if item.getRequired() %}
+                            {{ '<i class="fa fa-check"></i>' }}
+                            {% endif %}
+                        </td>
                         <td>{{ item.getType() }}</td>
                         <td>{{ item.getFormat() }}</td>
                         <td>{{ item.getParent() }}</td>
@@ -57,12 +69,13 @@
                         <td>
                             {# <a class="btn btn-light" href="{{ path('json_field_show', {'id': item.id}) }}" #}
                             {# title="{{ 'action.preview'|trans }}"><i class="fa fa-eye"></i></a>#}
-                            <a class="btn btn-primary" href="{{ path('json_field_edit', {'id': item.id}) }}"
+                            <a class="btn btn-sm btn-primary" href="{{ path('json_field_edit', {'id': item.id}) }}"
                                title="{{ 'action.edit'|trans }}"><i class="fa fa-edit"></i></a>
                             {{ include('json_field/_delete_form.html.twig', {'json_field': item}) }}
                             {% if item.getType() == 'object' %}
-                                <a class="btn btn-warning" href="{{ path('json_field_edit', {'id': item.id}) }}"
-                                   title="{{ 'action.edit'|trans }}"><i class="fa fa-plus"></i></a>
+                                <a class="btn btn-sm btn-warning"
+                                   href="{{ path('json_field_new', {'schema': item.getJsonSchema().id, 'parent': item.id}) }}"
+                                   title="{{ 'action.new'|trans }}"><i class="fa fa-plus"></i></a>
                             {% endif %}
                         </td>
                     </tr>
