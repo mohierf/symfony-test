@@ -15,73 +15,59 @@
                 <th scope="col">{{ 'format'|trans }}</th>
                 <th scope="col">{{ 'pattern'|trans }}</th>
                 {# <th scope="col">{{ 'parent'|trans }}</th>#}
-                <th scope="col">{{ 'children'|trans }}</th>
+                {# <th scope="col">{{ 'children'|trans }}</th>#}
 
                 <th scope="col">{{ 'Actions'|trans }}</th>
             </tr>
         </thead>
-        <tbody>
-        <tr class="clickable" data-toggle="collapse" data-target="#group-of-rows-1" aria-expanded="false" aria-controls="group-of-rows-1">
-            <td><i class="fa fa-plus" aria-hidden="true"></i></td>
-            <td>Example</td>
-            <td>Example</td>
-            <td>Example</td>
-        </tr>
-        </tbody>
-        <tbody id="group-of-rows-1" class="collapse">
-        <tr>
-            <td>- child row</td>
-            <td>data 1</td>
-            <td>data 1</td>
-            <td>data 1</td>
-        </tr>
-        <tr>
-            <td>- child row</td>
-            <td>data 2</td>
-            <td>data 2</td>
-            <td>data 2</td>
-        </tr>
-        </tbody>
 
         <tbody>
-        {% set in_group = '' %}
-        {% set upper_group = 'No' %}
         {% for item in items %}
-{#            {% if item.getJsonFields() and in_group == upper_group %}#}
-            {% if item.getGroup() != in_group %}
-                {% if in_group != upper_group %}
-                    {% set upper_group = in_group %}
-                    <tr class="clickable" data-toggle="collapse" data-target="#{{ in_group }}" aria-expanded="false" aria-controls="{{ in_group }}">
-                        <td><i class="fa fa-plus" aria-hidden="true"></i> {{ in_group }}</td>
-                {% else %}
-                    <tr>
-                        <td></td>
-                {% endif %}
-                {% set in_group = item.getGroup() %}
+            {% if item.getJsonFields()|length > 0 %}
+            <tr data-group-leader="{{ item.getGroup() }}" class="clickable" data-toggle="collapse" data-target=".{{ item.getGroup() }}" aria-expanded="false" aria-controls="group-{{ item.getGroup() }}">
+            <td><i class="fa fa-plus" aria-hidden="true"></i>
+            </td>
             {% else %}
-                <tr>
-                    <td></td>
-            {% endif %}
-{#            {% endif %}#}
+                {% if item.getGroup() != '' %}
+                <tr data-group="{{ item.getGroup() }}" class="collapse {{ item.getGroup() }}">
+            {% else %}
+            <tr data-group="{{ item.getGroup() }}">
+                {% endif %}
+                <td></td>
+                {% endif %}
 
-                <th scope="row">{{ item.id }} - {{ item.getGroup() }} - {{ in_group }} - {{ upper_group }}</th>
-                <td>{{ item.getJsonSchema() }}</td>
-                <td>{{ item.getName() }}</td>
+                <th scope="row">{{ item.id }}</th>
+                {# <td>{{ item.getLevel() }}</td>#}
+                {# <td>{{ item.getJsonSchema() }}</td>#}
+                <td>
+                    {% if item.getLevel() > 0 %}
+                        {% for i in range(0, item.getLevel() - 1) %}
+                            {{- '<i class="fa fa-minus"></i>' -}}
+                        {% endfor %}
+                    {% endif %}
+                    {{- item.getName() -}}
+                </td>
                 <td>
                     {% if item.getRequired() %}
                         {{ '<i class="fa fa-check"></i>' }}
                     {% endif %}
                 </td>
                 <td>{{ item.getType() }}</td>
-                <td>{{ item.getFormat() }}</td>
-                <td>{{ item.getParent() }}</td>
                 <td>
-                    {% for child in item.getJsonFields() %}
-                        {{ child.getName() }}
-                    {% else %}
-                        {{ '-/-'|trans }}
-                    {% endfor %}
+                    {% if item.getNullable() %}
+                        {{ '<i class="fa fa-check"></i>' }}
+                    {% endif %}
                 </td>
+                <td>{{ item.getFormat() }}</td>
+                <td>{{ item.getPattern() }}</td>
+                {# <td>{{ item.getParent() }}</td>#}
+                {# <td>#}
+                {#   {% for child in item.getJsonFields() %}#}
+                {#     {{ child.getName() }}#}
+                {#   {% else %}#}
+                {#     {{ '-/-'|trans }}#}
+                {#   {% endfor %}#}
+                {# </td>#}
 
                 <td>
                     <div class="btn-group btn-group-sm" role="group">
@@ -90,6 +76,7 @@
                         <a class="btn btn-sm btn-primary" href="{{ path(itemType ~ '_edit', {'id': item.id}) }}"
                            title="{{ 'action.edit'|trans }}"><i class="fa fa-edit"></i></a>
                         {{ include(itemType ~ '/_delete_form.html.twig', {'itemType': itemType, 'item': item}) }}
+
                         {% if item.getType() == 'object' or item.getType() == 'array' %}
                             <a class="btn btn-sm btn-warning"
                                href="{{ path(itemType ~ '_new', {'schema': item.getJsonSchema().id, 'parent': item.id}) }}"
@@ -98,12 +85,6 @@
                     </div>
                 </td>
             </tr>
-
-            {% if item.getParent() and in_group != item.getParent().getName() %}
-                {% set in_group = item.getParent().getName() %}
-                </tbody>
-                <tbody id="group-{{ in_group }}" class="collapse">
-            {% endif %}
 
         {% else %}
             <tr>

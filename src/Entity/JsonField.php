@@ -245,15 +245,14 @@ class JsonField
     public function getGroup(): ?string
     {
         if (count($this->getJsonFields()) > 0) {
-            // I am the group leader
+            // I am a group leader for my children
             return $this->getName();
         } elseif ($this->getParent()) {
-            // Else it is my parent
+            // Else it is my parent that is leading me
             return $this->getParent()->getName();
-        } else {
-            return '';
         }
-        return $this->pattern;
+
+        return $this->group;
     }
 
 }

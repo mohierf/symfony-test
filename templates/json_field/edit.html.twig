@@ -12,9 +12,7 @@
             <div class="card card-default">
                 <div class="card-header"><a class="btn btn-primary" href="{{ path('json_field_index') }}">{{ 'action.back_to_list'|trans }}</a></div>
                 <div class="card-body">
-                    {{ include('json_field/_form.html.twig', {'button_label': 'action.update'|trans}) }}
-                    <a class="btn btn-primary" href="{{ path('json_field_index') }}">{{ 'action.back_to_list'|trans }}</a>
-                    {{ include('json_field/_delete_form.html.twig') }}
+                    {{ include(itemType ~ '/_form.html.twig', {'button_label': 'action.update'|trans}) }}
                 </div>
             </div><!-- END card-->
         </div>

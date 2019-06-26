@@ -139,7 +139,7 @@ class JsonSchemaController extends AbstractController
                 'meta_schema' => $metaSchema->getContent(),
                 'json_text' => json_encode($jsonText),
                 'json_schema' => $jsonSchema,
-                'json_schema_fields' => $jsonFields,
+                'items' => $jsonFields,
                 'form' => $form->createView(),
             ]
         );

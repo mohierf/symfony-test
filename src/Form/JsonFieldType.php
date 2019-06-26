@@ -19,20 +19,18 @@ class JsonFieldType extends AbstractType
     {
         $builder
             ->add('jsonSchema')
+            ->add('parent')
+/**
             ->add('parent', EntityType::class,
                 [
                     'class' => JsonField::class,
                     'choice_label' => 'name',
-                    'label' => 'trans.field.parent',
                     'query_builder' => static function (JsonFieldRepository $er) {
                         return $er->createQueryBuilder('e')->orderBy('e.name', 'ASC');
                     },
-//                    'attr' => [
-//                        'class' => 'js-select2',
-//                        'data-placeholder' => $this->translator->trans('trans.choose.parent'),
-//                    ],
                 ]
             )
+ */
             ->add('name')
             ->add('type', ChoiceType::class, [
                 'help' => 'Mandatory field type',
@@ -58,7 +56,7 @@ class JsonFieldType extends AbstractType
                 'help' => 'Field format',
                 'multiple' => false,
                 'choices'  => [
-                    'None' => '',
+                    'None' => null,
                     'Date and Time' => 'date-time',
                     'Date' => 'date',
                     'Time' => 'time',
@@ -68,7 +66,9 @@ class JsonFieldType extends AbstractType
                 ],
             ])
             ->add('pattern', TextType::class, [
+                'required' => false,
                 'help' => 'The pattern must be a valid regular expression.',
+                'empty_data' => '',
             ])
         ;
     }

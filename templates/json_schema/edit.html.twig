@@ -55,80 +55,65 @@
                             <tr>
                                 <th scope="col"></th>
                                 <th scope="col">Id</th>
-{#                                <th scope="col">{{ 'level'|trans }}</th>#}
-{#                                <th scope="col">{{ 'schema'|trans }}</th>#}
+                                {# <th scope="col">{{ 'level'|trans }}</th>#}
+                                {# <th scope="col">{{ 'schema'|trans }}</th>#}
                                 <th scope="col">{{ 'name'|trans }}</th>
                                 <th scope="col">{{ 'required'|trans }}</th>
                                 <th scope="col">{{ 'type'|trans }}</th>
                                 <th scope="col">{{ 'nullable'|trans }}</th>
                                 <th scope="col">{{ 'format'|trans }}</th>
                                 <th scope="col">{{ 'pattern'|trans }}</th>
-{#                                <th scope="col">{{ 'parent'|trans }}</th>#}
-                                <th scope="col">{{ 'children'|trans }}</th>
+                                {# <th scope="col">{{ 'parent'|trans }}</th>#}
+                                {# <th scope="col">{{ 'children'|trans }}</th>#}
                                 <th scope="col">{{ 'Actions'|trans }}</th>
                             </tr>
                             </thead>
+
                             <tbody>
-                            <tr class="clickable" data-toggle="collapse" data-target="#group-of-rows-1" aria-expanded="false" aria-controls="group-of-rows-1">
-                                <td><i class="fa fa-plus" aria-hidden="true"></i></td>
-                                <td>Example</td>
-                                <td>Example</td>
-                                <td>Example</td>
-                            </tr>
-                            </tbody>
-                            <tbody id="group-of-rows-1" class="collapse">
-                            <tr>
-                                <td>- child row</td>
-                                <td>data 1</td>
-                                <td>data 1</td>
-                                <td>data 1</td>
-                            </tr>
-                            <tr>
-                                <td>- child row</td>
-                                <td>data 2</td>
-                                <td>data 2</td>
-                                <td>data 2</td>
-                            </tr>
-                            </tbody>
-                            <tbody>
-                            {% for item in json_schema_fields %}
+                            {% for item in items %}
                                 {% if item.getJsonFields()|length > 0 %}
-                                    <tr class="clickable" data-toggle="collapse" data-target="#group-{{ item.id }}" aria-expanded="false" aria-controls="group-{{ item.id }}">
-                                    <td><i class="fa fa-plus" aria-hidden="true"></i></td>
+                                    <tr data-group-leader="{{ item.getGroup() }}" class="clickable" data-toggle="collapse" data-target=".{{ item.getGroup() }}" aria-expanded="false" aria-controls="group-{{ item.getGroup() }}">
+                                    <td><i class="fa fa-plus" aria-hidden="true"></i>
+                                    </td>
                                 {% else %}
-                                    <tr>
+                                    {% if item.getGroup() != '' %}
+                                        <tr data-group="{{ item.getGroup() }}" class="collapse {{ item.getGroup() }}">
+                                    {% else %}
+                                        <tr data-group="{{ item.getGroup() }}">
+                                    {% endif %}
                                     <td></td>
                                 {% endif %}
-                                <th scope="row">{{ item.id }}</th>
-{#                                <td>{{ item.getLevel() }}</td>#}
-{#                                <td>{{ item.getJsonSchema() }}</td>#}
+
+                                <th scope="row">{{- item.id -}}</th>
+                                {# <td>{{ item.getLevel() }}</td>#}
+                                {# <td>{{ item.getJsonSchema() }}</td>#}
                                 <td>
                                     {% if item.getLevel() > 0 %}
                                     {% for i in range(0, item.getLevel() - 1) %}
-                                        {{ '<i class="fa fa-arrow-right"></i>' }}
+                                        {{- '<i class="fa fa-minus"></i>' -}}
                                     {% endfor %}
                                     {% endif %}
-                                    {{ item.getName() }}
+                                    {{- item.getName() -}}
                                 </td>
                                 <td>
                                     {% if item.getRequired() %}
                                         {{ '<i class="fa fa-check"></i>' }}
                                     {% endif %}
                                 </td>
-                                <td>{{ item.getType() }}</td>
+                                <td>{{- item.getType() -}}</td>
                                 <td>
                                     {% if item.getNullable() %}
-                                        {{ '<i class="fa fa-check"></i>' }}
+                                        {{- '<i class="fa fa-check"></i>' -}}
                                     {% endif %}
                                 </td>
-                                <td>{{ item.getFormat() }}</td>
-                                <td>{{ item.getPattern() }}</td>
-{#                                    <td>{{ item.getParent() }}</td>#}
-                                <td>
-                                    {% if item.getJsonFields()|length > 0 %}
-                                        {{ item.getJsonFields()|length }} {{ 'children'|trans }}
-                                    {% endif %}
-                                </td>
+                                <td>{{- item.getFormat() -}}</td>
+                                <td>{{- item.getPattern() -}}</td>
+                                {# <td>{{ item.getParent() }}</td>#}
+                                {# <td>#}
+                                {#     {% if item.getJsonFields()|length > 0 %}#}
+                                {#         {{ item.getJsonFields()|length }} {{ 'children'|trans }}#}
+                                {#     {% endif %}#}
+                                {# </td>#}
 
                                 <td>
                                     <div class="btn-group btn-group-sm" role="group">
@@ -160,15 +145,14 @@
 {% endblock %}
 
 {% block javascripts %}
-    <script src="{{ asset('build/json-editor-page.js') }}"></script>
-
     <script type="text/javascript">
-        // require('jsoneditor/dist/jsoneditor.css');
-        // require('jsoneditor/dist/jsoneditor.js');
-        // import JSONEditor from 'jsoneditor/dist/jsoneditor.js';
-
         $(document).ready(function(){
-            console.log("Script working properly!");
+            $('#json_schema_content').on('blur', function(){
+                const ugly = this.value;
+                const obj = JSON.parse(ugly);
+                const pretty = JSON.stringify(obj, undefined, 4);
+                this.value = pretty;
+            });
         });
     </script>
 {% endblock %}
