@@ -45,7 +45,8 @@
             </div>
         </div>
         <div class="card card-default col-md-9">
-            {{ include(itemType ~ '/_table.html.twig') }}
+            {{ include(itemType ~ '/_table.html.twig', {
+                'tableCaption': 'List of Json fields'}) }}
         </div>
     </div>
 {% endblock %}

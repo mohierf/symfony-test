@@ -242,26 +242,18 @@ class JsonField
         return $this;
     }
 
-    public function getForTemplate()
+    public function getGroup(): ?string
     {
-        $my_clone = clone $this;
-
-        foreach (get_object_vars($my_clone) as $prop => $value) {
-            if (in_array($prop, ['parent'])) {
-                if ($this->getParent()) {
-                    $parent = $this->getParent()->getId();
-                } else {
-                    $parent = '#';
-                }
-                $my_clone->parent = $parent;
-            } elseif (in_array($prop, ['jsonFields', 'jsonSchema'])) {
-                $my_clone->jsonSchema = '';
-                $my_clone->jsonFields = '';
-            }
+        if (count($this->getJsonFields()) > 0) {
+            // I am the group leader
+            return $this->getName();
+        } elseif ($this->getParent()) {
+            // Else it is my parent
+            return $this->getParent()->getName();
+        } else {
+            return '';
         }
-
-        return $my_clone;
+        return $this->pattern;
     }
-
 
 }

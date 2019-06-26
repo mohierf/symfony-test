@@ -1,6 +1,6 @@
 <div class="card-body table-responsive">
     <table class="table table-sm table-hover">
-        <caption>List of Json fields</caption>
+        <caption>{{ tableCaption|default('List of items') }}</caption>
         <thead class="thead-dark">
             <tr>
                 <th scope="col"></th>
@@ -44,25 +44,27 @@
         </tbody>
 
         <tbody>
-        {% set in_group = '#' %}
+        {% set in_group = '' %}
+        {% set upper_group = 'No' %}
         {% for item in items %}
-            {% if item.getParent() %}
-                <tr><td colspan="20">{{ item.getName() }} - {{ item.getParent().getName() }}</td></tr>
-            {% else %}
-                <tr><td colspan="20">{{ item.getName() }} - Root</td></tr>
-            {% endif %}
-
-            {% if item.getParent() and in_group != item.getParent().getName() %}
-                {% set old_group = in_group %}
-                {% set in_group = item.getParent().getName() %}
-                <tr class="clickable" data-toggle="collapse" data-target="#{{ old_group }}" aria-expanded="false" aria-controls="{{ old_group }}">
-                    <td><i class="fa fa-plus" aria-hidden="true"></i> {{ old_group }}</td>
+{#            {% if item.getJsonFields() and in_group == upper_group %}#}
+            {% if item.getGroup() != in_group %}
+                {% if in_group != upper_group %}
+                    {% set upper_group = in_group %}
+                    <tr class="clickable" data-toggle="collapse" data-target="#{{ in_group }}" aria-expanded="false" aria-controls="{{ in_group }}">
+                        <td><i class="fa fa-plus" aria-hidden="true"></i> {{ in_group }}</td>
+                {% else %}
+                    <tr>
+                        <td></td>
+                {% endif %}
+                {% set in_group = item.getGroup() %}
             {% else %}
                 <tr>
-                    <td>{{ in_group }}</td>
+                    <td></td>
             {% endif %}
+{#            {% endif %}#}
 
-                <th scope="row">{{ item.id }}</th>
+                <th scope="row">{{ item.id }} - {{ item.getGroup() }} - {{ in_group }} - {{ upper_group }}</th>
                 <td>{{ item.getJsonSchema() }}</td>
                 <td>{{ item.getName() }}</td>
                 <td>
