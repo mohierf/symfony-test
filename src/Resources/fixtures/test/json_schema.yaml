@@ -800,4 +800,4 @@ App\Entity\JsonSchema:
     lastUpdate: <dateTimeBetween('now','now')>
     name: 'PaymentSchedule'
     __calls:
-    - setContent: [<{PaymentScheduleJsonSchema}>]
+      - setContent: [<{PaymentScheduleJsonSchema}>]

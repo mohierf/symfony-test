@@ -31,7 +31,7 @@ class JsonSchema
      *
      * @ORM\Column(name="name", type="string", length=255)
      */
-    protected $name = '';
+    protected $name = 'New';
 
     /**
      * @ORM\OneToMany(targetEntity="App\Entity\JsonField", mappedBy="jsonSchema", orphanRemoval=true)

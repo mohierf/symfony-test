@@ -7,6 +7,7 @@ use App\Entity\JsonSchema;
 use Doctrine\ORM\EntityManagerInterface;
 use JsonSchema\Exception\InvalidSchemaException;
 use JsonSchema\Validator;
+use JsonSchema\Constraints\Constraint;
 use Psr\Log\LoggerInterface;
 use stdClass;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -52,8 +53,20 @@ class JsonSchemaService
     {
         $objectToValidate = json_decode($json);
 
-        $validator = new Validator();
-        $validator->validate($objectToValidate, json_decode($schema->getContent()));
+        try {
+            $validator = new Validator();
+
+
+            $validator->validate(
+                $objectToValidate,
+                (object) ['$ref' => 'http://json-schema.org/draft-06/schema#'],
+                Constraint::CHECK_MODE_VALIDATE_SCHEMA);
+//
+//            $validator->validate($objectToValidate,
+//                json_decode($schema->getContent()), Constraint::CHECK_MODE_VALIDATE_SCHEMA);
+        } catch (\ErrorException $exp) {
+            throw new InvalidSchemaException(sprintf('Using the schema [%s], exception: %s', $schema->getName(), $exp->getMessage()), JsonResponse::HTTP_BAD_REQUEST);
+        }
 
         if (!$validator->isValid()) {
             $errors = [];
@@ -75,9 +88,9 @@ class JsonSchemaService
     public function getFieldsFromSchema(JsonSchema $jsonSchema): array
     {
         $fields = [];
-        $this->logger->info("Get the Json fields from: " . $jsonSchema->getName());
+        $this->logger->info("getFieldsFromSchema - Get the Json fields from: " . $jsonSchema->getName());
         $this->_initializeFields($jsonSchema, $jsonSchema->getContent(), $fields);
-        $this->logger->info("Got: " . count($fields) . " fields.");
+        $this->logger->info("getFieldsFromSchema - Got: " . count($fields) . " fields.");
 
         return $fields;
     }
@@ -96,7 +109,9 @@ class JsonSchemaService
      */
     private function _initializeFields($jsonSchema, $object, &$fields, $level = 0, $parent = null, string $prefix = ''): array
     {
+        $this->logger->info("_initializeFields: ". gettype($object));
         $object = $object instanceof stdClass ? $object : json_decode($object);
+        $this->logger->info("_initializeFields: ". gettype($object));
 
         $jsonFieldRepository = $this->em->getRepository(JsonField::class);
 
@@ -125,7 +140,7 @@ class JsonSchemaService
                 $this->logger->info("- set parent as: " . $parent);
                 $parent->addJsonField($jsField);
             }
-            $this->logger->info($jsField->getName() . '/' . $level . ' <-' . $parent . ', exists: ' . $stillExisting . ', ' . $currentField . ', prefix: ' . $prefix);
+            $this->logger->info($jsField->getName() . "/{$level} <-'{$parent}', exists: {$stillExisting}, {$currentField}, prefix: {$prefix}");
 
             if (isset($value->type)) {
                 $type = $value->type;
@@ -172,10 +187,10 @@ class JsonSchemaService
             }
 
             if (! $stillExisting) {
-                $this->logger->info(' creating ' . $jsField . '...');
+                $this->logger->info(" creating $jsField...");
                 $this->em->persist($jsField);
             } else {
-                $this->logger->info(' updating ' . $jsField . '...');
+                $this->logger->info(" updating $jsField...");
                 $this->em->flush();
             }
             $fields[$jsField->getName()] = $jsField;
@@ -195,11 +210,11 @@ class JsonSchemaService
     public function getJsonFromFields(array $jsonFields, string $description = ""): array
     {
         $jsonContent = [];
-        $this->logger->warning("Build the schema from ");
         $this->logger->warning("Build the schema from ". count($jsonFields) . " fields");
 
         $jsonContent["description"] = $description;
         $jsonContent["type"] = "object";
+        $jsonContent["required"] = [];
         $required = [];
         $jsonContent["properties"] = $this->_jsonFromFields($jsonFields, $required);
         $jsonContent["required"] = $required;
@@ -213,40 +228,42 @@ class JsonSchemaService
     private function _jsonFromFields($jsonFields, &$required, $level = 0): array
     {
         $flat = [];
-        $this->logger->warning("*$level* ->: " . count($jsonFields));
+//        $this->logger->warning("*$level* ->: " . count($jsonFields));
 
         // Create a string array to configure the JsTree
         foreach ($jsonFields as $field) {
             if ($field->getLevel() != $level) {
                 continue;
             }
-            $this->logger->warning("*$level* ->: " . $field->getName());
+            $this->logger->warning("*$level* ->: {$field->getName()}, {$field->getShortName()}, '{$field->getRequired()}''");
 
-            if ($field->getRequired()) {
-                $required[] = $field->getName();
+            if ($field->isRequired()) {
+                $required[] = $field->getShortName();
             }
 
             $newField = [];
             if ($field->getType() === 'object') {
                 $fieldContent = [];
                 $fieldContent["type"] = $field->getType();
-                $fieldContent["required"] = [];
+                $fieldContent["properties"] = $this->_jsonFromFields($field->getJsonFields(), $fieldContent["required"], $level + 1);
 
-                $this->logger->warning("*$level* ->: down for: " . count($field->getJsonFields()));
-
-                $fieldContent["properties"] = $this->_jsonFromFields($field->getJsonFields(), $jsonContent, $level + 1);
-
-                $newField[$field->getName()] = $fieldContent;
+                $newField[$field->getShortName()] = $fieldContent;
             } elseif ($field->getType() === 'array') {
                 $fieldContent = [];
                 $fieldContent["type"] = $field->getType();
-//                $field_content["required"] = [];
-                $fieldContent["items"] = $this->_jsonFromFields($field->getJsonFields(), $jsonContent, $level + 1);
+                $fieldContent["items"] = [
+                    "type" => "object",
+                    "properties" => $this->_jsonFromFields($field->getJsonFields(), $required2, $level + 1)
+                ];
+//                $fieldContent["items"] = $this->_jsonFromFields(
+//                    $field->getJsonFields(),
+//                    $required2, $level + 1);
 
-                $newField[$field->getName()] = $fieldContent;
+                $newField[$field->getShortName()] = $fieldContent;
             } else {
                 $fieldContent = [];
                 $fieldContent["type"] = $field->getType();
+
                 if ($field->getFormat()) {
                     $fieldContent["format"] = $field->getFormat();
                 }
@@ -254,13 +271,22 @@ class JsonSchemaService
                     $fieldContent["pattern"] = $field->getPattern();
                 }
 
-                $newField[$field->getName()] = $fieldContent;
+                // Specific case for oneOf fields
+                if ($field->isNullable()) {
+                    $fieldDefinition = $fieldContent;
+
+                    $fieldContent = [];
+                    $fieldContent["oneOf"][] = [ "type" => "null" ];
+                    $fieldContent["oneOf"][] = $fieldDefinition;
+                }
+
+                $newField[$field->getShortName()] = $fieldContent;
             }
 
             $jsonContent[] = $newField;
             $flat[] = $newField;
 
-            $this->logger->warning("*** ->: " . json_encode($newField));
+//            $this->logger->warning("*** ->: " . json_encode($newField));
 //            $this->logger->warning("*** ->: " . json_encode($flat));
         }
 

@@ -35,10 +35,15 @@
                             <tr>
                                 <td>{{ json_schema.id }}</td>
                                 <td>{{ json_schema.name }}</td>
-                                <td>{{ json_schema.content }}</td>
+                                <td>{{ json_schema.content|slice(0, 255) }}...</td>
                                 <td>
-                                    <a class="btn btn-light" href="{{ path('json_schema_show', {'id': json_schema.id}) }}" title="{{ 'Preview'|trans }}"><i class="fa fa-eye"></i></a>
-                                    <a class="btn btn-primary" href="{{ path('json_schema_edit', {'id': json_schema.id}) }}" title="{{ 'Edit'|trans }}"><i class="fa fa-edit"></i></a>
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <a class="btn btn-light" href="{{ path('json_schema_show', {'id': json_schema.id}) }}"
+                                           title="{{ 'Preview'|trans }}"><i class="fa fa-eye"></i></a>
+                                        <a class="btn btn-primary" href="{{ path('json_schema_edit', {'id': json_schema.id}) }}"
+                                           title="{{ 'Edit'|trans }}"><i class="fa fa-edit"></i></a>
+                                        {{ include('json_schema/_delete_form.html.twig') }}
+                                    </div>
                                 </td>
                             </tr>
                         {% else %}

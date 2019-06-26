@@ -115,6 +115,11 @@ class JsonField
         return $this;
     }
 
+    public function isRequired(): ?bool
+    {
+        return $this->required;
+    }
+
     public function getRequired(): ?bool
     {
         return $this->required;
@@ -125,6 +130,11 @@ class JsonField
         $this->required = $required;
 
         return $this;
+    }
+
+    public function isNullable(): ?bool
+    {
+        return $this->nullable;
     }
 
     public function getNullable(): ?bool
@@ -141,6 +151,21 @@ class JsonField
 
     public function getName(): ?string
     {
+        return $this->name;
+    }
+
+    /**
+     * This method removes the parent name part in the unique name of the field
+     * A field PostCode included in a clientAddress has a name: clientAddress_PostCode
+     * This method will return: PostCode
+     *
+     * @return string|null
+     */
+    public function getShortName(): ?string
+    {
+        if ($this->getParent()) {
+            return str_replace($this->getParent()->getName(). '_', "", $this->name);
+        }
         return $this->name;
     }
 

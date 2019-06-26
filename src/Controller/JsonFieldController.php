@@ -49,42 +49,53 @@ class JsonFieldController extends AbstractController
         $this->logger->info("Required schema: " . $required_schema_name);
 
         $json_schemas = [];
-        if (empty($request->query->get('schema'))) {
-            $json_schemas = $jsonSchemaRepository->findAll();
-        } else {
-            $json_schemas[] = $required_schema_name;
-        }
-
         $jsonFields = [];
-        if (! empty($request->query->get('schema'))) {
-            $schema = $jsonSchemaRepository->findOneBy(['name' => $required_schema_name]);
-            $this->logger->info("Schema: " . $schema->getName());
-            if ($schema) {
-                $jsonFields = $schema->getJsonFields();
-            }
-        } else {
-            $jsonFields = $json_fieldRepository->findAll();
-        }
-
-        // Create a string array to configure the JsTree
         $jsonContent = [];
-        foreach ($jsonFields as $field) {
-            $this->logger->info("*** ->: " . $field->getName());
-
-            // The text field is displayed on the UI
-            $new_field = [];
-            $new_field['id'] = $field->getId();
-            $new_field['text'] = $field->getName();
-            $new_field['type'] = $field->getType();
-            $new_field['format'] = $field->getFormat();
-            $new_field['pattern'] = $field->getPattern();
-            $new_field['parent'] = '#';
-            if ($field->getParent()) {
-                $new_field['parent'] = (string)$field->getParent()->getId();
+        if (empty($required_schema_name)) {
+            $json_schemas = $jsonSchemaRepository->findAll();
+            $jsonFields = $json_fieldRepository->findAll();
+        } else {
+            // Try to get with the name
+            $schema = $jsonSchemaRepository->findOneBy(['name' => $required_schema_name]);
+            $this->logger->info("-> schema: " . serialize($schema));
+            if ($schema) {
+                $this->logger->info("Schema: " . $schema->getName());
+                $json_schemas[] = $schema;
+                $jsonFields = $schema->getJsonFields();
+            } else {
+                // Try with an id
+                $schema = $jsonSchemaRepository->find($required_schema_name);
+                $this->logger->info("-> schema: " . serialize($schema));
+                if ($schema) {
+                    $this->logger->info("Schema found by id: " . $schema->getName());
+                    $json_schemas[] = $schema;
+                    $jsonFields = $schema->getJsonFields();
+                    $required_schema_name = $schema->getName();
+                }
             }
-            $jsonContent[] = $new_field;
 
-            $this->logger->info("*** ->: " . json_encode($new_field));
+            // Create a string array to configure the JsTree
+            if ($schema) {
+                foreach ($jsonFields as $field) {
+                    $this->logger->info("*** ->: " . $field->getName());
+
+                    // The text field is displayed on the UI
+                    $new_field = [];
+                    $new_field['id'] = $field->getId();
+                    $new_field['text'] = $field->getName();
+                    $new_field['type'] = $field->getType();
+                    $new_field['format'] = $field->getFormat();
+                    $new_field['pattern'] = $field->getPattern();
+                    $new_field['parent'] = '#';
+                    if ($field->getParent()) {
+                        $new_field['parent'] = (string)$field->getParent()->getId();
+                    }
+                    $jsonContent[] = $new_field;
+
+                    $this->logger->info("*** ->: " . json_encode($new_field));
+                }
+            }
+
         }
 
         return $this->render('json_field/index.html.twig', [

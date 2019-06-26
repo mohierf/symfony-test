@@ -24,6 +24,8 @@ use Symfony\Component\Routing\Annotation\Route;
  */
 class JsonSchemaController extends AbstractController
 {
+    const META_SCHEMA_NAME = 'MetaSchema';
+
     /**
      * @var JsonSchemaRepository
      */
@@ -99,13 +101,19 @@ class JsonSchemaController extends AbstractController
      */
     public function edit(Request $request, JsonSchema $jsonSchema): Response
     {
+        if ($jsonSchema->getName() == self::META_SCHEMA_NAME) {
+            $this->addFlash('warning', 'Meta schema is not editable.');
+
+            return $this->redirectToRoute('json_schema_index', ['id' => $jsonSchema->getId()]);
+        }
+
         $form = $this->createForm(JsonSchemaType::class, $jsonSchema);
         $form->handleRequest($request);
 
         /** @var JsonSchema $metaSchema
         Get the JSON meta schema for validating the schemas, name = MetaSchema
          */
-        $metaSchema = $this->jsonSchemaRepository->findOneBy(['name' => "MetaSchema"]);
+        $metaSchema = $this->jsonSchemaRepository->findOneBy(['name' => self::META_SCHEMA_NAME]);
 
         // Validate the Json according to the Json meta schema
         try {

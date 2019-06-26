@@ -10,23 +10,30 @@
         .row { margin: 1em auto; }
     </style>
 
-    <h1>Json fields</h1>
+    <h1>Json fields edition{% if json_schema %}: {{ json_schema }}{% else %}: {{ 'All known schemas'|trans }}{% endif %}</h1>
 
-    <a class="btn btn-primary" href="{{ path(itemType ~ '_new') }}">{{ 'action.new'|trans }}</a>
+    <div class="btn-toolbar" role="toolbar" aria-label="Toolbar with button groups">
+        <div class="btn-group mr-2" role="group">
+            <a class="btn btn-primary" href="{{ path(itemType ~ '_new') }}">{{ 'action.new'|trans }}</a>
+        </div>
+    </div>
 
     <div class="row" style="height: 200px; overflow: hidden">
         <div class="card col-md-3">
             <h4>Json schemas</h4>
             <div class="card-body">
             <ul class="list-group list-group-horizontal">
+                <li class="list-group-item">
+                    <a class="btn btn-primary" href="{{ path('json_schema_index') }}">{{ 'View all'|trans }}</a>
+                </li>
                 {% for item in json_schemas %}
                     <li class="list-group-item">
-                        <a class="btn btn-warning" href="{{ path('json_schema_edit', {'id': item.id}) }}">{{ 'Edit'|trans }}</a>
-
-                        {{ item.getName() }}
+                        <a class="btn btn-warning" href="{{ path('json_schema_edit', {'id': item.id}) }}">
+                            <i class="fa fa-edit"></i>{{ item.getName() }}
+                        </a>
                     </li>
                 {% else %}
-                    <li class="list-group-item">{{ 'No schemas'|trans }}</li>
+                    <li class="list-group-item">{{ 'No schemas in the database'|trans }}</li>
                 {% endfor %}
             </ul>
             </div>

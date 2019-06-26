@@ -21,12 +21,36 @@ class JsonSchemaType extends AbstractType
     {
         $builder
             ->add('name', TextType::class, [
+                'required'   => true,
                 'label' => 'trans.field.name',
+                'empty_data' => 'NewSchema',
             ])
             ->add('content', TextareaType::class, [
+                'required'   => false,
                 'label' => 'trans.field.content',
+                'empty_data' => '{
+                    "description": "New Schema",
+                    "type": "object",
+                    "required": [
+                    ],
+                    "properties": {
+                        "id": {
+                            "type": "string"
+                        },
+                        "name": {
+                            "type": "string"
+                        },
+                        "number": {
+                            "type": "integer"
+                        },
+                        "date": {
+                            "type": "string",
+                            "format": "date-time"
+                        },
+                    }
+                }',
                 'attr' => [
-                    'rows' => 30,
+                    'rows' => 20,
                 ],
             ]);
     }
