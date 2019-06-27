@@ -34,7 +34,7 @@ class JsonSchema
     protected $name = 'New';
 
     /**
-     * @ORM\OneToMany(targetEntity="App\Entity\JsonField", mappedBy="jsonSchema", orphanRemoval=true)
+     * @ORM\OneToMany(targetEntity="App\Entity\JsonField", mappedBy="jsonSchema", orphanRemoval=true, cascade={"persist"})
      */
     private $jsonFields;
 

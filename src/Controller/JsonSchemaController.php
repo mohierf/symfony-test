@@ -107,17 +107,17 @@ class JsonSchemaController extends AbstractController
             return $this->redirectToRoute('json_schema_index', ['id' => $jsonSchema->getId()]);
         }
 
-        $form = $this->createForm(JsonSchemaType::class, $jsonSchema);
-        $form->handleRequest($request);
-
         /** @var JsonSchema $metaSchema
         Get the JSON meta schema for validating the schemas, name = MetaSchema
          */
         $metaSchema = $this->jsonSchemaRepository->findOneBy(['name' => self::META_SCHEMA_NAME]);
 
-        // Validate the Json according to the Json meta schema
+        $form = $this->createForm(JsonSchemaType::class, $jsonSchema);
+        $form->handleRequest($request);
+
         try {
-            $this->jsonSchemaService->validate($jsonSchema->getContent(), $metaSchema);
+            // Validate the Json according to the Json meta schema
+            $this->jsonSchemaService->validate($jsonSchema->getContent(), $metaSchema, true);
             $this->addFlash('success', 'Schema is a valid Json schema.');
 
             if ($form->isSubmitted() && $form->isValid()) {
@@ -132,6 +132,8 @@ class JsonSchemaController extends AbstractController
 
         // Build and get the Json fields from a schema
         $jsonFields = $this->jsonSchemaService->getFieldsFromSchema($jsonSchema);
+
+        return $this->render('lucky/number.html.twig', ['number' => 10 ]);
 
         // Build the Json from a Json fields list
         $jsonText = $this->jsonSchemaService->getJsonFromFields($jsonFields, $jsonSchema->getName());

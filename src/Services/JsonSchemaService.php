@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Entity\JsonField;
 use App\Entity\JsonSchema;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\EntityManagerInterface;
 use JsonSchema\Exception\InvalidSchemaException;
 use JsonSchema\Validator;
@@ -49,21 +50,25 @@ class JsonSchemaService
      *
      * @return bool
      */
-    public function validate($json, JsonSchema $schema): bool
+    public function validate($json, JsonSchema $schema, bool $schemaValidationMode = false): bool
     {
         $objectToValidate = json_decode($json);
 
         try {
             $validator = new Validator();
+            if ($schemaValidationMode) {
+                // Validate with a schema constraint
+                $validator->validate($objectToValidate,
+                    json_decode($schema->getContent()), Constraint::CHECK_MODE_VALIDATE_SCHEMA);
+            } else {
+                $validator->validate($objectToValidate, json_decode($schema->getContent()));
+            }
 
-
-            $validator->validate(
-                $objectToValidate,
-                (object) ['$ref' => 'http://json-schema.org/draft-06/schema#'],
-                Constraint::CHECK_MODE_VALIDATE_SCHEMA);
-//
-//            $validator->validate($objectToValidate,
-//                json_decode($schema->getContent()), Constraint::CHECK_MODE_VALIDATE_SCHEMA);
+//            // Give a try with HTTP Meta schema
+//            $validator->validate(
+//                $objectToValidate,
+//                (object) ['$ref' => 'http://json-schema.org/draft-06/schema#'],
+//                Constraint::CHECK_MODE_VALIDATE_SCHEMA);
         } catch (\ErrorException $exp) {
             throw new InvalidSchemaException(sprintf('Using the schema [%s], exception: %s', $schema->getName(), $exp->getMessage()), JsonResponse::HTTP_BAD_REQUEST);
         }
@@ -83,14 +88,19 @@ class JsonSchemaService
     /**
      * @param JsonSchema $jsonSchema
      *
-     * @return array
+     * @return Collection
      */
-    public function getFieldsFromSchema(JsonSchema $jsonSchema): array
+    public function getFieldsFromSchema(JsonSchema $jsonSchema): Collection
     {
-        $fields = [];
-        $this->logger->info("getFieldsFromSchema - Get the Json fields from: " . $jsonSchema->getName());
+        $this->em->getRepository(JsonSchema::class);
+
+        $fields = $jsonSchema->getJsonFields();
+//        $fields = [];
+        $this->logger->info("getFieldsFromSchema - Get the Json fields (". count($fields) .") from: " . $jsonSchema->getName());
         $this->_initializeFields($jsonSchema, $jsonSchema->getContent(), $fields);
         $this->logger->info("getFieldsFromSchema - Got: " . count($fields) . " fields.");
+
+        $this->em->flush();
 
         return $fields;
     }
@@ -100,7 +110,7 @@ class JsonSchemaService
      *
      * @param JsonSchema $jsonSchema
      * @param            $object
-     * @param            $fields
+     * @param Collection $fields
      * @param int        $level
      * @param JsonField  $parent
      * @param string     $prefix
@@ -109,12 +119,10 @@ class JsonSchemaService
      */
     private function _initializeFields($jsonSchema, $object, &$fields, $level = 0, $parent = null, string $prefix = ''): array
     {
-        $this->logger->info("_initializeFields: ". gettype($object));
         $object = $object instanceof stdClass ? $object : json_decode($object);
-        $this->logger->info("_initializeFields: ". gettype($object));
 
-        $jsonFieldRepository = $this->em->getRepository(JsonField::class);
-
+//        $jsonFieldRepository = $this->em->getRepository(JsonField::class);
+//
         $flat = [];
         $separator = '_';
 
@@ -125,10 +133,17 @@ class JsonSchemaService
             if ($prefix) {
                 $jsField->setName($prefix . $separator . $key);
             }
-            $stillExisting = false;
-            if($currentField = $jsonFieldRepository->findOneBy(['name' => $jsField->getName(), 'jsonSchema' => $jsonSchema->getId()])) {
-                $stillExisting = true;
+
+            $stillExisting = $fields->exists(function($key, $element) use ($jsField) {
+                /** @var JsonField $element */
+                return ($jsField->getJsonSchema() === $element->getJsonSchema())
+                    and ($jsField->getName() === $element->getName());
+            });
+            if ($stillExisting) {
+                $jsField = $fields->get($key);
+                $this->logger->info("Got: " . $jsField->getName());
             }
+
             if (isset($value->format)) {
                 $jsField->setFormat($value->format);
             }
@@ -137,10 +152,10 @@ class JsonSchemaService
             }
             $jsField->setLevel($level);
             if ($parent) {
-                $this->logger->info("- set parent as: " . $parent);
                 $parent->addJsonField($jsField);
             }
-            $this->logger->info($jsField->getName() . "/{$level} <-'{$parent}', exists: {$stillExisting}, {$currentField}, prefix: {$prefix}");
+
+            $this->logger->info("[$level] " . $jsField->getName() . " <-'{$parent}', exists: {$stillExisting}, prefix: {$prefix}");
 
             if (isset($value->type)) {
                 $type = $value->type;
@@ -148,21 +163,21 @@ class JsonSchemaService
 
                 if ('array' === $type) {
                     $this->logger->info(" is of type: " . $value->type);
-                    if (! $stillExisting) {
-                        $this->em->persist($jsField);
-                    } else {
-                        $this->em->flush();
-                    }
+//                    if (! $stillExisting) {
+//                        $this->em->persist($jsField);
+//                    } else {
+//                        $this->em->flush();
+//                    }
 
                     // Complex type: array
                     $this->_initializeFields($jsonSchema, $value->items, $fields, $level + 1, $jsField, $jsField->getName());
                 } elseif ('object' === $type) {
                     $this->logger->info(" is of type: " . $value->type);
-                    if (! $stillExisting) {
-                        $this->em->persist($jsField);
-                    } else {
-                        $this->em->flush();
-                    }
+//                    if (! $stillExisting) {
+//                        $this->em->persist($jsField);
+//                    } else {
+//                        $this->em->flush();
+//                    }
 
                     if ('#' === $parent) {
                         // A root element
@@ -182,21 +197,19 @@ class JsonSchemaService
                     if (isset($value->oneOf[0]->format)) {
                         $jsField->setType($value->oneOf[0]->format);
                     }
-                    $this->logger->info($key . ", type: oneOf, " . serialize($jsField));
                 }
             }
-
-            if (! $stillExisting) {
+            if (!$stillExisting) {
                 $this->logger->info(" creating $jsField...");
+                $jsonSchema->addJsonField($jsField);
                 $this->em->persist($jsField);
             } else {
-                $this->logger->info(" updating $jsField...");
-                $this->em->flush();
+                $this->em->merge($jsField);
             }
             $fields[$jsField->getName()] = $jsField;
         }
         $this->logger->info("Level $level, got: " . count($fields) . " fields.");
-        $this->em->flush();
+//        $this->em->flush();
 
         return $flat;
     }
