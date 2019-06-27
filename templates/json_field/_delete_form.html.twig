@@ -1,5 +1,5 @@
-{#{% if is_granted('ROLE_ADMIN') %}#}
-    <form method="post" action="{{ path(itemType ~ '_delete', {'id': item.id}) }}" onsubmit="">
+{% if is_granted('ROLE_ADMIN') %}
+    <form data-type="deletion" data-item="{{ item.id }}" method="post" action="{{ path('json_field_delete', {'id': item.id}) }}" onsubmit="">
         <input type="hidden" name="_method" value="DELETE">
         <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ item.id) }}">
 

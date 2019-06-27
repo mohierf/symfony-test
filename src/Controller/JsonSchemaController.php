@@ -4,15 +4,11 @@ namespace App\Controller;
 
 use App\Entity\JsonField;
 use App\Entity\JsonSchema;
-use App\Entity\Template;
 use App\Form\JsonSchemaType;
 use App\Repository\JsonSchemaRepository;
 use App\Services\JsonSchemaService;
 use JsonSchema\Exception\InvalidSchemaException;
-use Psr\Log\LoggerInterface;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\Security;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -40,7 +36,7 @@ class JsonSchemaController extends AbstractController
      * JsonSchemaController constructor.
      *
      * @param JsonSchemaRepository $jsonSchemaRepository
-     * @param JsonSchemaService $jsonSchemaService
+     * @param JsonSchemaService    $jsonSchemaService
      */
     public function __construct(JsonSchemaRepository $jsonSchemaRepository,
                                 JsonSchemaService $jsonSchemaService)
@@ -94,20 +90,20 @@ class JsonSchemaController extends AbstractController
     /**
      * @Route("/{id}/edit", name="json_schema_edit", methods="GET|POST")
      *
-     * @param Request $request
+     * @param Request    $request
      * @param JsonSchema $jsonSchema
      *
      * @return Response
      */
     public function edit(Request $request, JsonSchema $jsonSchema): Response
     {
-        if ($jsonSchema->getName() == self::META_SCHEMA_NAME) {
+        if (self::META_SCHEMA_NAME == $jsonSchema->getName()) {
             $this->addFlash('warning', 'Meta schema is not editable.');
 
             return $this->redirectToRoute('json_schema_index', ['id' => $jsonSchema->getId()]);
         }
 
-        /** @var JsonSchema $metaSchema
+        /** @var JsonSchema
         Get the JSON meta schema for validating the schemas, name = MetaSchema
          */
         $metaSchema = $this->jsonSchemaRepository->findOneBy(['name' => self::META_SCHEMA_NAME]);
@@ -116,38 +112,36 @@ class JsonSchemaController extends AbstractController
         $form->handleRequest($request);
 
         try {
-            // Validate the Json according to the Json meta schema
-            $this->jsonSchemaService->validate($jsonSchema->getContent(), $metaSchema, true);
-            $this->addFlash('success', 'Schema is a valid Json schema.');
-
             if ($form->isSubmitted() && $form->isValid()) {
+                // Validate the Json according to the Json meta schema
+                $this->jsonSchemaService->validate($jsonSchema->getContent(), $metaSchema, true);
+                $this->addFlash('success', 'Schema is a valid Json schema.');
+
                 $this->getDoctrine()->getManager()->flush();
                 $this->addFlash('success', 'Schema updated.');
 
                 return $this->redirectToRoute('json_schema_index', ['id' => $jsonSchema->getId()]);
             }
         } catch (InvalidSchemaException $e) {
-            return new JsonResponse(['message' => sprintf('Invalid schema. JSON does not validate due to violations : %s', $e->getMessage())], JsonResponse::HTTP_BAD_REQUEST);
+            $this->addFlash('danger', sprintf('Invalid schema. JSON does not validate due to violations : %s', $e->getMessage()));
         }
 
         // Build and get the Json fields from a schema
-        $jsonFields = $this->jsonSchemaService->getFieldsFromSchema($jsonSchema);
-
-        return $this->render('lucky/number.html.twig', ['number' => 10 ]);
-
-        // Build the Json from a Json fields list
-        $jsonText = $this->jsonSchemaService->getJsonFromFields($jsonFields, $jsonSchema->getName());
+        $this->jsonSchemaService->getFieldsFromSchema($jsonSchema);
 
         // Get the editable fields
         $jsonFieldRepository = $this->getDoctrine()->getRepository(JsonField::class);
         $jsonFields = $jsonFieldRepository->findBy(['jsonSchema' => $jsonSchema->getId()]);
+
+        // Build the Json from a Json fields list
+        $jsonContent = $this->jsonSchemaService->getJsonFromFields($jsonFields, $jsonSchema->getName());
 
         return $this->render(
             'json_schema/edit.html.twig',
             [
                 'meta_schema_name' => $metaSchema->getName(),
                 'meta_schema' => $metaSchema->getContent(),
-                'json_text' => json_encode($jsonText),
+                'json_text' => json_encode($jsonContent),
                 'json_schema' => $jsonSchema,
                 'items' => $jsonFields,
                 'form' => $form->createView(),

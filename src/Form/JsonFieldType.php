@@ -3,9 +3,6 @@
 namespace App\Form;
 
 use App\Entity\JsonField;
-use App\Repository\CompanyRepository;
-use App\Repository\JsonFieldRepository;
-use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
@@ -20,7 +17,7 @@ class JsonFieldType extends AbstractType
         $builder
             ->add('jsonSchema')
             ->add('parent')
-/**
+/*
             ->add('parent', EntityType::class,
                 [
                     'class' => JsonField::class,
@@ -35,7 +32,7 @@ class JsonFieldType extends AbstractType
             ->add('type', ChoiceType::class, [
                 'help' => 'Mandatory field type',
                 'multiple' => false,
-                'choices'  => [
+                'choices' => [
                     'String' => 'string',
                     'Integer' => 'integer',
                     'Boolean' => 'boolean',
@@ -45,17 +42,17 @@ class JsonFieldType extends AbstractType
                 ],
             ])
             ->add('nullable', CheckboxType::class, [
-                'label'    => 'Nullable field? The field is present but may be a null type',
+                'label' => 'Nullable field? The field is present but may be a null type',
                 'required' => false,
             ])
             ->add('required', CheckboxType::class, [
-                'label'    => 'Required field?',
+                'label' => 'Required field?',
                 'required' => false,
             ])
             ->add('format', ChoiceType::class, [
                 'help' => 'Field format',
                 'multiple' => false,
-                'choices'  => [
+                'choices' => [
                     'None' => null,
                     'Date and Time' => 'date-time',
                     'Date' => 'date',

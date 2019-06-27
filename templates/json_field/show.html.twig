@@ -9,23 +9,31 @@
         <tbody>
         <tr>
             <th>Id</th>
-            <td>{{ json_field.id }}</td>
+            <td>{{ item.id }}</td>
         </tr>
         <tr>
             <th>{{ 'trans.field.json_field_name'|trans }}</th>
-            <td>{{ json_field.getName() }}</td>
+            <td>{{ item.getName() }}</td>
+        </tr>
+        <tr>
+            <th>{{ 'trans.field.json_field_type'|trans }}</th>
+            <td>{{ item.getType() }}</td>
+        </tr>
+        <tr>
+            <th>{{ 'trans.field.json_field_format'|trans }}</th>
+            <td>{{ item.getFormat() }}</td>
         </tr>
         <tr>
             <th>{{ 'trans.field.parent'|trans }}</th>
-            <td>{{ json_field.getParent() }}</td>
+            <td>{{ item.getParent() }}</td>
         </tr>
         <tr>
             <th>{{ 'trans.field.json_fields'|trans }}</th>
             <td>
-                {% for child in json_field.getRealms() %}
-                    {{ child.getRealmName() }}
+                {% for child in item.getJsonFields() %}
+                    {{ child.getShortName() }}
                 {% else %}
-                    {{ '-/-'|trans }}
+                    {{ 'No children'|trans }}
                 {% endfor %}
             </td>
         </tr>

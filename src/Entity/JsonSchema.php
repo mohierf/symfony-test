@@ -34,7 +34,7 @@ class JsonSchema
     protected $name = 'New';
 
     /**
-     * @ORM\OneToMany(targetEntity="App\Entity\JsonField", mappedBy="jsonSchema", orphanRemoval=true, cascade={"persist"})
+     * @ORM\OneToMany(targetEntity="App\Entity\JsonField", mappedBy="jsonSchema", orphanRemoval=true)
      */
     private $jsonFields;
 
@@ -43,7 +43,8 @@ class JsonSchema
         $this->jsonFields = new ArrayCollection();
     }
 
-    public function __toString() {
+    public function __toString()
+    {
         return $this->name;
     }
 

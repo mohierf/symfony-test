@@ -2,17 +2,13 @@
 
 namespace App\Entity;
 
-use ApiPlatform\Core\Annotation\ApiResource;
 use App\Entity\Traits\IdTrait;
 use App\Entity\Traits\TimestampTrait;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
-use phpDocumentor\Reflection\Types\Boolean;
-use Psr\Log\LoggerInterface;
 
 /**
- * @ApiResource()
  * @ORM\Table(name="json_field",
  *     uniqueConstraints={
  *          @ORM\UniqueConstraint(name="field_idx", columns={"json_schema_id","name"})
@@ -73,7 +69,7 @@ class JsonField
     private $parent;
 
     /**
-     * @ORM\OneToMany(targetEntity="App\Entity\JsonField", mappedBy="parent")
+     * @ORM\OneToMany(targetEntity="App\Entity\JsonField", mappedBy="parent",cascade={"remove"})
      */
     private $jsonFields;
 
@@ -91,11 +87,13 @@ class JsonField
     }
 
     /**
-     * When dumped as a string, returns a string formed with: schema name and field name
+     * When dumped as a string, returns a string formed with: schema name and field name.
+     *
      * @return string
      */
-    public function __toString() {
-        return $this->jsonSchema. " - " . $this->name;
+    public function __toString()
+    {
+        return $this->name;
     }
 
     public function getId(): ?int
@@ -157,15 +155,16 @@ class JsonField
     /**
      * This method removes the parent name part in the unique name of the field
      * A field PostCode included in a clientAddress has a name: clientAddress_PostCode
-     * This method will return: PostCode
+     * This method will return: PostCode.
      *
      * @return string|null
      */
     public function getShortName(): ?string
     {
         if ($this->getParent()) {
-            return str_replace($this->getParent()->getName(). '_', "", $this->name);
+            return str_replace($this->getParent()->getName().'_', '', $this->name);
         }
+
         return $this->name;
     }
 
@@ -279,5 +278,4 @@ class JsonField
 
         return $this->group;
     }
-
 }
