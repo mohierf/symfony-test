@@ -2,12 +2,12 @@
 
 namespace App\Controller;
 
-use App\Entity\JsonField;
 use App\Entity\JsonSchema;
 use App\Form\JsonSchemaType;
 use App\Repository\JsonSchemaRepository;
 use App\Services\JsonSchemaService;
 use JsonSchema\Exception\InvalidSchemaException;
+use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -23,6 +23,11 @@ class JsonSchemaController extends AbstractController
     const META_SCHEMA_NAME = 'MetaSchema';
 
     /**
+     * @var LoggerInterface
+     */
+    private $logger;
+
+    /**
      * @var JsonSchemaRepository
      */
     private $jsonSchemaRepository;
@@ -35,12 +40,15 @@ class JsonSchemaController extends AbstractController
     /**
      * JsonSchemaController constructor.
      *
+     * @param LoggerInterface      $logger
      * @param JsonSchemaRepository $jsonSchemaRepository
      * @param JsonSchemaService    $jsonSchemaService
      */
-    public function __construct(JsonSchemaRepository $jsonSchemaRepository,
+    public function __construct(LoggerInterface $logger,
+                                JsonSchemaRepository $jsonSchemaRepository,
                                 JsonSchemaService $jsonSchemaService)
     {
+        $this->logger = $logger;
         $this->jsonSchemaRepository = $jsonSchemaRepository;
         $this->jsonSchemaService = $jsonSchemaService;
     }
@@ -103,52 +111,39 @@ class JsonSchemaController extends AbstractController
             return $this->redirectToRoute('json_schema_index', ['id' => $jsonSchema->getId()]);
         }
 
-        /** @var JsonSchema
-        Get the JSON meta schema for validating the schemas, name = MetaSchema
-         */
-        $metaSchema = $this->jsonSchemaRepository->findOneBy(['name' => self::META_SCHEMA_NAME]);
-
         $form = $this->createForm(JsonSchemaType::class, $jsonSchema);
         $form->handleRequest($request);
 
-        try {
-            if ($form->isSubmitted() && $form->isValid()) {
-                // Validate the Json according to the Json meta schema
-                $this->jsonSchemaService->validate($jsonSchema->getContent(), $metaSchema, true);
-//                $this->addFlash('success', 'Schema is a valid Json schema.');
+        if ($form->isSubmitted() && $form->isValid()) {
+            try {
+                /** @var JsonSchema $metaSchema */
+                $metaSchema = $this->jsonSchemaRepository->findOneBy(['name' => self::META_SCHEMA_NAME]);
 
-                // Build the Json from a Json fields list
-                $jsonContent = $jsonSchema->getJsonFromFields();
+                // Validate the Json according to the Json meta sc
+                $this->jsonSchemaService->validate($jsonSchema->getContent(), $metaSchema, true);
+                $this->addFlash('success', 'Schema is a valid Json schema.');
+
+                // Update the related Json schema
+                $this->jsonSchemaService->getJsonFromFields($jsonSchema);
 
                 $this->getDoctrine()->getManager()->flush();
                 $this->addFlash('success', 'Schema updated.');
-
-                return $this->redirectToRoute('json_schema_index', ['id' => $jsonSchema->getId()]);
+            } catch (InvalidSchemaException $e) {
+                $this->addFlash('danger', sprintf('Invalid schema, violations: %s', $e->getMessage()));
             }
-        } catch (InvalidSchemaException $e) {
-            $this->addFlash('danger', sprintf('Invalid schema. JSON does not validate due to violations : %s', $e->getMessage()));
+
+            return $this->redirectToRoute('json_schema_index', ['id' => $jsonSchema->getId()]);
         }
 
         // Build and get the Json fields from a schema
         $this->jsonSchemaService->getFieldsFromSchema($jsonSchema);
 
-        // Get the editable fields
-//        $jsonFieldRepository = $this->getDoctrine()->getRepository(JsonField::class);
-//        $jsonFields = $jsonFieldRepository->findBy(['jsonSchema' => $jsonSchema->getId()]);
-        $jsonFields = $jsonSchema->getJsonFields();
-//
-//        // Build the Json from a Json fields list
-//        $jsonContent = $this->jsonSchemaService->getJsonFromFields($jsonFields, $jsonSchema->getName());
-        $jsonContent = $jsonSchema->getContent();
-
         return $this->render(
             'json_schema/edit.html.twig',
             [
-                'meta_schema_name' => $metaSchema->getName(),
-                'meta_schema' => $metaSchema->getContent(),
-                'json_text' => json_encode($jsonContent),
                 'json_schema' => $jsonSchema,
-                'items' => $jsonFields,
+                'json_text' => $jsonSchema->getContent(),
+                'items' => $jsonSchema->getJsonFields(),
                 'form' => $form->createView(),
             ]
         );
@@ -194,11 +189,20 @@ class JsonSchemaController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $em = $this->getDoctrine()->getManager();
-            $em->persist($jsonSchema);
-            $em->flush();
+            try {
+                /** @var JsonSchema $metaSchema */
+                $metaSchema = $this->jsonSchemaRepository->findOneBy(['name' => self::META_SCHEMA_NAME]);
+                $this->jsonSchemaService->validate($jsonSchema->getContent(), $metaSchema, true);
+                $this->addFlash('success', 'Schema is a valid Json schema.');
 
-            return $this->redirectToRoute('json_schema_index');
+                $em = $this->getDoctrine()->getManager();
+                $em->persist($jsonSchema);
+                $em->flush();
+
+                return $this->redirectToRoute('json_schema_index');
+            } catch (InvalidSchemaException $e) {
+                $this->addFlash('danger', sprintf('Invalid schema, violations: %s', $e->getMessage()));
+            }
         }
 
         return $this->render(

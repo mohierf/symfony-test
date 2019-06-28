@@ -111,7 +111,8 @@ class JsonSchemaService
         $fields = $jsonSchema->getJsonFields();
 
         $this->logger->info('getFieldsFromSchema - Get the Json fields ('.count($fields).') from: '.$jsonSchema->getName());
-        $this->_initializeFields($jsonSchema, $jsonSchema->getContent(), $fields);
+        $json = $jsonSchema->getContent();
+        $this->_initializeFields($jsonSchema, $json, $fields);
         $this->logger->info('getFieldsFromSchema - Got: '.count($fields).' fields.');
 
         $this->em->flush();
@@ -147,13 +148,11 @@ class JsonSchemaService
 
             return $flat;
         }
+        $this->logger->info("Level $level, got: ".count($fields).' fields.');
         foreach ($object->properties as $key => $value) {
             $jsField = new JsonField();
             $jsField->setJsonSchema($jsonSchema);
-            $jsField->setName($key);
-            if ($prefix) {
-                $jsField->setName($prefix.$separator.$key);
-            }
+            $jsField->setName($prefix ? $prefix.$separator.$key : $key);
 
             // Search if the Json field is already existing
             $matches = $fields->filter(function ($name) use ($jsField) {
@@ -202,104 +201,108 @@ class JsonSchemaService
                     }
                 }
             }
+
             if (!$stillExisting) {
                 $this->logger->info(" creating $jsField...");
                 $jsonSchema->addJsonField($jsField);
                 $this->em->persist($jsField);
-            } else {
-                $this->em->merge($jsField);
             }
-            $fields[$jsField->getName()] = $jsField;
         }
         $this->logger->info("Level $level, got: ".count($fields).' fields.');
 
         return $flat;
     }
-//
-//    /**
-//     * @param JsonField[] $jsonFields
-//     * @param string      $description
-//     *
-//     * @return array
-//     */
-//    public function getJsonFromFields($jsonFields, $description = ''): array
-//    {
-//        $this->logger->info('Build the Json schema for '.count($jsonFields).' fields');
-//
-//        $required = [];
-//
-//        $jsonContent = [
-//            'description' => $description,
-//            'type' => 'object',
-//            'required' => [],
-//            'properties' => $this->_jsonFromFields($jsonFields, $required),
-//        ];
-//        $jsonContent['required'] = $required;
-//
-//        return $jsonContent;
-//    }
-//
-//    private function _jsonFromFields($jsonFields, &$required, $level = 0): array
-//    {
-//        $jsonObject = [];
-//
-//        // Create a string array to configure the JsTree
-//        foreach ($jsonFields as $field) {
-//            if ($field->getLevel() != $level) {
-//                continue;
-//            }
-//            $this->logger->info("[$level] ->: {$field->getName()}, {$field->getShortName()}, required: '{$field->getRequired()}'");
-//
-//            if ($field->isRequired()) {
-//                $required[] = $field->getShortName();
-//            }
-//
-//            if ('object' === $field->getType()) {
-//                $fieldContent = [];
-//                $fieldContent['type'] = $field->getType();
-//                $required2 = [];
-//                $fieldContent['properties'] = $this->_jsonFromFields($field->getJsonFields(), $required2, $level + 1);
-//                $fieldContent['required'] = $required2;
-//
-//                $jsonObject[$field->getShortName()] = $fieldContent;
-//            } elseif ('array' === $field->getType()) {
-//                $fieldContent = [];
-//                $fieldContent['type'] = $field->getType();
-//                $required2 = [];
-//                $fieldContent['items'] = [
-//                    'type' => 'object',
-//                    'properties' => $this->_jsonFromFields($field->getJsonFields(), $required2, $level + 1),
-//                ];
-//                $fieldContent['items']['required'] = $required2;
-//
-//                $jsonObject[$field->getShortName()] = $fieldContent;
-//            } else {
-//                $fieldContent = [];
-//                $fieldContent['type'] = $field->getType();
-//
-//                if ($field->getFormat()) {
-//                    $fieldContent['format'] = $field->getFormat();
-//                }
-//                if ($field->getPattern()) {
-//                    $fieldContent['pattern'] = $field->getPattern();
-//                }
-//
-//                // Specific case for oneOf fields
-//                if ($field->isNullable()) {
-//                    $fieldDefinition = $fieldContent;
-//
-//                    $fieldContent = [];
-//                    $fieldContent['oneOf'][] = $fieldDefinition;
-//                    $fieldContent['oneOf'][] = ['type' => 'null'];
-//                }
-//
-//                $jsonObject[$field->getShortName()] = $fieldContent;
-//            }
-//        }
-//        $this->logger->info('[$level] parsed '.count($jsonObject).' properties, including '.count($required).' required fields.');
-//
-//        return $jsonObject;
-//    }
+
+    /**
+     * @param JsonSchema $schema
+     *
+     * @return array
+     */
+    public function getJsonFromFields(JsonSchema $schema): array
+    {
+        $this->logger->info('Build the Json schema for '.$schema->getName().' fields');
+
+        $required = [];
+
+        $jsonContent = [
+            'description' => $schema->getName(),
+            'type' => 'object',
+            'required' => [],
+            'properties' => $this->_jsonFromFields($schema->getJsonFields(), $required),
+        ];
+        $jsonContent['required'] = $required;
+
+        // todo: when created with a form, the schema is stored as string encoded json
+        // Update the schema with the computed Json content
+        $this->em->getRepository(JsonSchema::class);
+        $schema->setContent(json_encode($jsonContent));
+        $this->em->flush();
+        $this->logger->info('Updated the Json schema content.');
+
+        return $jsonContent;
+    }
+
+    private function _jsonFromFields($jsonFields, &$required, $level = 0): array
+    {
+        $jsonObject = [];
+
+        // Create a string array to configure the JsTree
+        foreach ($jsonFields as $field) {
+            if ($field->getLevel() != $level) {
+                continue;
+            }
+            $this->logger->info("[$level] ->: {$field->getName()}, {$field->getShortName()}, required: '{$field->getRequired()}'");
+
+            if ($field->isRequired()) {
+                $required[] = $field->getShortName();
+            }
+
+            if ('object' === $field->getType()) {
+                $fieldContent = [];
+                $fieldContent['type'] = $field->getType();
+                $required2 = [];
+                $fieldContent['properties'] = $this->_jsonFromFields($field->getJsonFields(), $required2, $level + 1);
+                $fieldContent['required'] = $required2;
+
+                $jsonObject[$field->getShortName()] = $fieldContent;
+            } elseif ('array' === $field->getType()) {
+                $fieldContent = [];
+                $fieldContent['type'] = $field->getType();
+                $required2 = [];
+                $fieldContent['items'] = [
+                    'type' => 'object',
+                    'properties' => $this->_jsonFromFields($field->getJsonFields(), $required2, $level + 1),
+                ];
+                $fieldContent['items']['required'] = $required2;
+
+                $jsonObject[$field->getShortName()] = $fieldContent;
+            } else {
+                $fieldContent = [];
+                $fieldContent['type'] = $field->getType();
+
+                if ($field->getFormat()) {
+                    $fieldContent['format'] = $field->getFormat();
+                }
+                if ($field->getPattern()) {
+                    $fieldContent['pattern'] = $field->getPattern();
+                }
+
+                // Specific case for oneOf fields
+                if ($field->isNullable()) {
+                    $fieldDefinition = $fieldContent;
+
+                    $fieldContent = [];
+                    $fieldContent['oneOf'][] = $fieldDefinition;
+                    $fieldContent['oneOf'][] = ['type' => 'null'];
+                }
+
+                $jsonObject[$field->getShortName()] = $fieldContent;
+            }
+        }
+        $this->logger->info('[$level] parsed '.count($jsonObject).' properties, including '.count($required).' required fields.');
+
+        return $jsonObject;
+    }
 
     /**
      * @param JsonSchema $jsonSchema

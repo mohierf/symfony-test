@@ -29,23 +29,6 @@
                     {{ include(itemType ~ '/_form.html.twig', {'button_label': 'action.update'|trans}) }}
                 </div>
             </div>
-            <div class="card card-default">
-                <div class="card-header">{{ json_schema.getName() }}</div>
-                <div class="card-body">
-                    <form>
-                        <div class="form-group">
-                            <label for="json_text_name" class="required">Name</label>
-                            <input type="text" id="json_text_name" readonly="readonly" class="form-control" value="SelfBuilt">
-                        </div>
-                        <div class="form-group">
-                            <label for="json_text">Built from Json fields</label>
-                            <textarea id="json_text" class="form-control" rows="20">
-                                {{- json_text -}}
-                            </textarea>
-                        </div>
-                    </form>
-                </div>
-            </div>
         </div>
         <div class="col-md-9">
             <div class="card card-default">
@@ -64,20 +47,12 @@
     {{ parent() }}
 
     <script type="text/javascript">
-        (function($){
         $(document).ready(function(){
             $('#json_schema_content').on('blur', function(){
                 const ugly = this.value;
                 const obj = JSON.parse(ugly);
                 this.value = JSON.stringify(obj, undefined, 4);
             });
-
-            $('#json_text').on('blur', function(){
-                const ugly = this.value;
-                const obj = JSON.parse(ugly);
-                this.value = JSON.stringify(obj, undefined, 4);
-            });
         });
-        })(jQuery);
     </script>
 {% endblock %}

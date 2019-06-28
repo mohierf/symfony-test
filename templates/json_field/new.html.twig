@@ -5,7 +5,7 @@
 
 {% block wrapper %}
     <div class="row">
-        <div class="col-md-6">
+        <div class="col-md-4">
             <!-- START card-->
             <div class="card card-default">
                 <div class="card-header">{{ 'configuration'|trans }}</div>
@@ -18,20 +18,16 @@
     </div>
 {% endblock %}
 
-{% block javascripts %}
+{% block javascript %}
     <script type="text/javascript">
       $(document).ready(function(){
-        console.log("New Json field!");
-
         var required_schema = '{{ schema_id }}';
         if (required_schema) {
-          console.log("{{ schema_id }}");
           $('#json_field_jsonSchema').val(required_schema);
         }
 
         var required_parent = '{{ parent_id }}';
         if (required_parent) {
-          console.log("{{ parent_id }}");
           $('#json_field_parent').val(required_parent);
         }
       });

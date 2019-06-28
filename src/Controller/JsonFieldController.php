@@ -6,7 +6,7 @@ use App\Entity\JsonField;
 use App\Entity\JsonSchema;
 use App\Form\JsonFieldType;
 use App\Repository\JsonFieldRepository;
-use Doctrine\DBAL\Exception\ForeignKeyConstraintViolationException;
+use App\Services\JsonSchemaService;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -25,13 +25,20 @@ class JsonFieldController extends AbstractController
     private $logger;
 
     /**
+     * @var JsonSchemaService
+     */
+    private $jsonSchemaService;
+
+    /**
      * JsonFieldController constructor.
      *
-     * @param LoggerInterface $logger
+     * @param LoggerInterface   $logger
+     * @param JsonSchemaService $jsonSchemaService
      */
-    public function __construct(LoggerInterface $logger)
+    public function __construct(LoggerInterface $logger, JsonSchemaService $jsonSchemaService)
     {
         $this->logger = $logger;
+        $this->jsonSchemaService = $jsonSchemaService;
     }
 
     /**
@@ -54,7 +61,7 @@ class JsonFieldController extends AbstractController
         if (empty($required_schema_name)) {
             $jsonSchemas = $jsonSchemaRepository->findAll();
             $jsonFields = $jsonFieldRepository->findAll();
-            $this->logger->info("Viewing Json fields for all schemas");
+            $this->logger->info('Viewing Json fields for all schemas');
         } else {
             // Try to get with the name
             $schema = $jsonSchemaRepository->findOneBy(['name' => $required_schema_name]);
@@ -86,6 +93,10 @@ class JsonFieldController extends AbstractController
     }
 
     /**
+     * Request to create a new Json field. Some query parameters:
+     * - schema: schema of the new field
+     * - parent: parent of the new field.
+     *
      * @Route("/new", name="json_field_new", methods="GET|POST")
      *
      * @param Request $request
@@ -98,19 +109,20 @@ class JsonFieldController extends AbstractController
         $this->logger->info('Required schema: '.$required_schema);
 
         $required_parent = $request->query->get('parent');
-        $this->logger->info('Required parent: '.$required_schema);
+        $this->logger->info('Required parent: '.$required_parent);
 
-        $json_field = new JsonField();
-        $form = $this->createForm(JsonFieldType::class, $json_field);
+        $jsonField = new JsonField();
+        $form = $this->createForm(JsonFieldType::class, $jsonField);
         $form->handleRequest($request);
         if ($form->isSubmitted() && $form->isValid()) {
             $em = $this->getDoctrine()->getManager();
             try {
-                $em->persist($json_field);
+                $em->persist($jsonField);
                 $em->flush();
                 $this->addFlash('success', 'New field created');
 
-                $json_field->getJsonSchema()->getJsonFromFields();
+                // Update the related Json schema
+                $this->jsonSchemaService->getJsonFromFields($jsonField->getJsonSchema());
 
                 if (!empty($required_schema)) {
                     return $this->redirectToRoute('json_schema_edit', ['id' => $required_schema]);
@@ -130,7 +142,7 @@ class JsonFieldController extends AbstractController
             [
                 'schema_id' => $required_schema,
                 'parent_id' => $required_parent,
-                'json_field' => $json_field,
+                'json_field' => $jsonField,
                 'form' => $form->createView(),
             ]
         );
@@ -148,18 +160,10 @@ class JsonFieldController extends AbstractController
     {
         if ($this->isCsrfTokenValid('delete'.$jsonField->getId(),
             $request->request->get('_token'))) {
-            try {
-                // todo: allow deletion of fields having children
-                $em = $this->getDoctrine()->getManager();
-                $em->remove($jsonField);
-                $em->flush();
-                $this->addFlash('success', 'Field deleted');
-            } catch (ForeignKeyConstraintViolationException $exp) {
-                $this->addFlash(
-                    'danger',
-                    'Deleting a node with children is forbidden!'
-                );
-            }
+            $em = $this->getDoctrine()->getManager();
+            $em->remove($jsonField);
+            $em->flush();
+            $this->addFlash('success', 'Field (and descendants deleted');
         }
 
         return $this->redirectToRoute('json_field_index');
@@ -181,21 +185,22 @@ class JsonFieldController extends AbstractController
     /**
      * @Route("/{id}/edit", name="json_field_edit", methods="GET|POST")
      *
-     * @param Request         $request
-     * @param JsonField       $jsonField
-     * @param LoggerInterface $logger
+     * @param Request   $request
+     * @param JsonField $jsonField
      *
      * @return Response
      */
-    public function edit(Request $request, JsonField $jsonField, LoggerInterface $logger): Response
+    public function edit(Request $request, JsonField $jsonField): Response
     {
-        $logger->info('Edit a json_field');
         $form = $this->createForm(JsonFieldType::class, $jsonField);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
             $this->getDoctrine()->getManager()->flush();
             $this->addFlash('success', 'Field updated');
+
+            // Update the related Json schema
+            $this->jsonSchemaService->getJsonFromFields($jsonField->getJsonSchema());
 
             $required_schema = $request->query->get('schema');
             if (!empty($required_schema)) {
