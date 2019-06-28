@@ -7,6 +7,7 @@ use App\Entity\JsonSchema;
 use App\Form\JsonFieldType;
 use App\Repository\JsonFieldRepository;
 use Doctrine\DBAL\Exception\ForeignKeyConstraintViolationException;
+use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -48,19 +49,18 @@ class JsonFieldController extends AbstractController
         $required_schema_name = $request->query->get('schema');
         $this->logger->info('Required schema: '.$required_schema_name);
 
-        $json_schemas = [];
+        $jsonSchemas = [];
         $jsonFields = [];
-        $jsonContent = [];
         if (empty($required_schema_name)) {
-            $json_schemas = $jsonSchemaRepository->findAll();
+            $jsonSchemas = $jsonSchemaRepository->findAll();
             $jsonFields = $jsonFieldRepository->findAll();
+            $this->logger->info("Viewing Json fields for all schemas");
         } else {
             // Try to get with the name
             $schema = $jsonSchemaRepository->findOneBy(['name' => $required_schema_name]);
-            $this->logger->info('-> schema: '.serialize($schema));
             if ($schema) {
                 $this->logger->info('Schema: '.$schema->getName());
-                $json_schemas[] = $schema;
+                $jsonSchemas[] = $schema;
                 $jsonFields = $schema->getJsonFields();
             } else {
                 // Try with an id
@@ -68,42 +68,20 @@ class JsonFieldController extends AbstractController
                 $this->logger->info('-> schema: '.serialize($schema));
                 if ($schema) {
                     $this->logger->info('Schema found by id: '.$schema->getName());
-                    $json_schemas[] = $schema;
+                    $jsonSchemas[] = $schema;
                     $jsonFields = $schema->getJsonFields();
                     $required_schema_name = $schema->getName();
                 }
             }
-
-            // Create a string array to configure the JsTree
-            if ($schema) {
-                foreach ($jsonFields as $field) {
-                    $this->logger->info('*** ->: '.$field->getName());
-
-                    // The text field is displayed on the UI
-                    $new_field = [];
-                    $new_field['id'] = $field->getId();
-                    $new_field['text'] = $field->getName();
-                    $new_field['type'] = $field->getType();
-                    $new_field['format'] = $field->getFormat();
-                    $new_field['pattern'] = $field->getPattern();
-                    $new_field['parent'] = '#';
-                    if ($field->getParent()) {
-                        $new_field['parent'] = (string) $field->getParent()->getId();
-                    }
-                    $jsonContent[] = $new_field;
-
-                    $this->logger->info('*** ->: '.json_encode($new_field));
-                }
-            }
+            $this->logger->info("Viewing Json fields for the schema: $required_schema_name");
         }
 
         return $this->render('json_field/index.html.twig', [
             'itemType' => 'json_field',
             'controller_name' => 'JsonFieldController',
             'json_schema' => $required_schema_name,
-            'json_schemas' => $json_schemas,
+            'json_schemas' => $jsonSchemas,
             'items' => $jsonFields,
-            'json_content' => json_encode($jsonContent),
         ]);
     }
 
@@ -117,7 +95,7 @@ class JsonFieldController extends AbstractController
     public function new(Request $request): Response
     {
         $required_schema = $request->query->get('schema');
-        $this->logger->warning('Required schema: '.$required_schema);
+        $this->logger->info('Required schema: '.$required_schema);
 
         $required_parent = $request->query->get('parent');
         $this->logger->info('Required parent: '.$required_schema);
@@ -127,15 +105,24 @@ class JsonFieldController extends AbstractController
         $form->handleRequest($request);
         if ($form->isSubmitted() && $form->isValid()) {
             $em = $this->getDoctrine()->getManager();
-            $em->persist($json_field);
-            $em->flush();
-            $this->addFlash('success', 'New field created');
+            try {
+                $em->persist($json_field);
+                $em->flush();
+                $this->addFlash('success', 'New field created');
 
-            if (!empty($required_schema)) {
-                return $this->redirectToRoute('json_schema_edit', ['id' => $required_schema]);
+                $json_field->getJsonSchema()->getJsonFromFields();
+
+                if (!empty($required_schema)) {
+                    return $this->redirectToRoute('json_schema_edit', ['id' => $required_schema]);
+                }
+
+                return $this->redirectToRoute('json_field_index');
+            } catch (UniqueConstraintViolationException $exp) {
+                $this->addFlash(
+                    'danger',
+                    'A field still exists with that name in the required schema'
+                );
             }
-
-            return $this->redirectToRoute('json_field_index');
         }
 
         return $this->render(

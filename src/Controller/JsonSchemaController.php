@@ -115,7 +115,10 @@ class JsonSchemaController extends AbstractController
             if ($form->isSubmitted() && $form->isValid()) {
                 // Validate the Json according to the Json meta schema
                 $this->jsonSchemaService->validate($jsonSchema->getContent(), $metaSchema, true);
-                $this->addFlash('success', 'Schema is a valid Json schema.');
+//                $this->addFlash('success', 'Schema is a valid Json schema.');
+
+                // Build the Json from a Json fields list
+                $jsonContent = $jsonSchema->getJsonFromFields();
 
                 $this->getDoctrine()->getManager()->flush();
                 $this->addFlash('success', 'Schema updated.');
@@ -130,11 +133,13 @@ class JsonSchemaController extends AbstractController
         $this->jsonSchemaService->getFieldsFromSchema($jsonSchema);
 
         // Get the editable fields
-        $jsonFieldRepository = $this->getDoctrine()->getRepository(JsonField::class);
-        $jsonFields = $jsonFieldRepository->findBy(['jsonSchema' => $jsonSchema->getId()]);
-
-        // Build the Json from a Json fields list
-        $jsonContent = $this->jsonSchemaService->getJsonFromFields($jsonFields, $jsonSchema->getName());
+//        $jsonFieldRepository = $this->getDoctrine()->getRepository(JsonField::class);
+//        $jsonFields = $jsonFieldRepository->findBy(['jsonSchema' => $jsonSchema->getId()]);
+        $jsonFields = $jsonSchema->getJsonFields();
+//
+//        // Build the Json from a Json fields list
+//        $jsonContent = $this->jsonSchemaService->getJsonFromFields($jsonFields, $jsonSchema->getName());
+        $jsonContent = $jsonSchema->getContent();
 
         return $this->render(
             'json_schema/edit.html.twig',
