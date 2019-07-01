@@ -101,23 +101,16 @@ class JsonSchemaService
 
     /**
      * @param JsonSchema $jsonSchema
-     *
-     * @return Collection
      */
-    public function getFieldsFromSchema(JsonSchema $jsonSchema): Collection
+    public function getFieldsFromSchema(JsonSchema $jsonSchema)
     {
         $this->em->getRepository(JsonSchema::class);
 
-        $fields = $jsonSchema->getJsonFields();
-
-        $this->logger->info('getFieldsFromSchema - Get the Json fields ('.count($fields).') from: '.$jsonSchema->getName());
-        $json = $jsonSchema->getContent();
-        $this->_initializeFields($jsonSchema, $json, $fields);
-        $this->logger->info('getFieldsFromSchema - Got: '.count($fields).' fields.');
+        $this->logger->info('getFieldsFromSchema - Get the Json fields ('.count($jsonSchema->getJsonFields()).') from: '.$jsonSchema->getName());
+        $fields = $this->_initializeFields($jsonSchema, $jsonSchema->getContent(), $jsonSchema->getJsonFields());
+        $this->logger->info('getFieldsFromSchema - Got: '.count($jsonSchema->getJsonFields()).' fields.');
 
         $this->em->flush();
-
-        return $fields;
     }
 
     /**
@@ -177,6 +170,12 @@ class JsonSchemaService
             }
             $this->logger->info("[$level] ".$jsField->getName()." <-'{$parent}', exists: {$stillExisting}, prefix: {$prefix}");
 
+            if (!$stillExisting) {
+                $this->logger->info(" creating $jsField...");
+                $jsonSchema->addJsonField($jsField);
+                $this->em->persist($jsField);
+            }
+
             if (isset($value->type)) {
                 $type = $value->type;
                 $this->logger->info(" $key is of type: $type");
@@ -200,12 +199,6 @@ class JsonSchemaService
                         $jsField->setFormat($value->oneOf[0]->format);
                     }
                 }
-            }
-
-            if (!$stillExisting) {
-                $this->logger->info(" creating $jsField...");
-                $jsonSchema->addJsonField($jsField);
-                $this->em->persist($jsField);
             }
         }
         $this->logger->info("Level $level, got: ".count($fields).' fields.');

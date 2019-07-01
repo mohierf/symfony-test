@@ -195,6 +195,9 @@ class JsonSchemaController extends AbstractController
                 $this->jsonSchemaService->validate($jsonSchema->getContent(), $metaSchema, true);
                 $this->addFlash('success', 'Schema is a valid Json schema.');
 
+                // Build and get the Json fields from a schema
+                $this->jsonSchemaService->getFieldsFromSchema($jsonSchema);
+
                 $em = $this->getDoctrine()->getManager();
                 $em->persist($jsonSchema);
                 $em->flush();

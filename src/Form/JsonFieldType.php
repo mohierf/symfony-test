@@ -28,6 +28,7 @@ class JsonFieldType extends AbstractType
                 ]
             )
  */
+            ->add('level')
             ->add('name')
             ->add('type', ChoiceType::class, [
                 'help' => 'Mandatory field type',

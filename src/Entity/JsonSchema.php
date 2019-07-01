@@ -7,6 +7,7 @@ use App\Entity\Traits\TimestampTrait;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Doctrine\ORM\Mapping\OrderBy;
 
 /**
  * JsonSchema.
@@ -35,6 +36,7 @@ class JsonSchema
 
     /**
      * @ORM\OneToMany(targetEntity="App\Entity\JsonField", mappedBy="jsonSchema", orphanRemoval=true)
+     * @OrderBy({"name" = "ASC"})
      */
     private $jsonFields;
 

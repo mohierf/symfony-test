@@ -164,6 +164,15 @@ class JsonFieldController extends AbstractController
             $em->remove($jsonField);
             $em->flush();
             $this->addFlash('success', 'Field (and descendants deleted');
+
+            // Update the related Json schema
+            $this->jsonSchemaService->getJsonFromFields($jsonField->getJsonSchema());
+
+            $required_schema = $request->query->get('schema');
+            if (!empty($required_schema)) {
+                // Back to the schema edition page
+                return $this->redirectToRoute('json_schema_edit', ['id' => $required_schema]);
+            }
         }
 
         return $this->redirectToRoute('json_field_index');

@@ -74,7 +74,7 @@ class JsonField
     private $jsonFields;
 
     /**
-     * @ORM\ManyToOne(targetEntity="App\Entity\JsonSchema", inversedBy="jsonFields")
+     * @ORM\ManyToOne(targetEntity="App\Entity\JsonSchema", inversedBy="jsonFields",cascade={"persist"})
      * @ORM\JoinColumn(nullable=false)
      */
     private $jsonSchema;
