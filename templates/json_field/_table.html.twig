@@ -107,9 +107,8 @@
 </div>
 
 
-{% block javascript %}
+{% block javascripts %}
     <script type="text/javascript">
-    (function($){
         $(document).ready(function(){
             $('form[data-type="deletion"]').on("submit", function (evt) {
                 const frm = $(this);
@@ -122,6 +121,5 @@
                 }
             });
         });
-    })(jQuery);
-</script>
+    </script>
 {% endblock %}

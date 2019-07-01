@@ -24,7 +24,9 @@
 
                     {% block title %}
                         <div class="content-heading">
-                            <div>{{ pageTitle | default('') | trans }}<small>{{ pageSubTitle | default('') | trans }}</small></div>
+                            <div>{{ pageTitle | default('') | trans }}
+                                <small>{{ pageSubTitle | default('') | trans }}</small>
+                            </div>
                         </div>
                     {% endblock %}
 
@@ -44,13 +46,16 @@
         </div>
         </div>
 
-        {{ encore_entry_script_tags('app') }}
-        <!-- Renders app.js & a webpack runtime.js file
-            <script src="/build/runtime.js"></script>
-            <script src="/build/app.js"></script> -->
-
         <!-- Optional JavaScript -->
         {% block javascripts %}
+            {{ encore_entry_script_tags('app') }}
+            <!-- Renders app.js & a webpack runtime.js file
+                <script src="/build/runtime.js"></script>
+                <script src="/build/app.js"></script> -->
+            <script type="text/javascript">
+                console.log("Layout ...");
+            </script>
+
         {% endblock %}
     </body>
 </html>

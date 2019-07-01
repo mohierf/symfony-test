@@ -43,11 +43,12 @@
     </div>
 {% endblock %}
 
-{% block javascript %}
+{% block javascripts %}
     {{ parent() }}
 
     <script type="text/javascript">
         $(document).ready(function(){
+            console.log("Edit...");
             $('#json_schema_content').on('blur', function(){
                 const ugly = this.value;
                 const obj = JSON.parse(ugly);
