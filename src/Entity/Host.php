@@ -31,17 +31,17 @@ class Host
     /**
      * @ORM\Column(type="boolean")
      */
-    private $register;
+    private $register = true;
 
     /**
-     * @ORM\Column(type="string", length=255)
+     * @ORM\Column(type="string", length=255, nullable=true)
      */
-    private $address;
+    private $address = '';
 
     /**
      * @ORM\Column(type="integer")
      */
-    private $check_interval;
+    private $check_interval = 1;
 
     /**
      * @ORM\ManyToOne(targetEntity="App\Entity\Command", inversedBy="hosts")

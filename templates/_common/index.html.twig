@@ -1,0 +1,26 @@
+{% extends 'layout.html.twig' %}
+
+{% set itemType = itemType|default('none') %}
+
+{% set pageTitle = itemType ~ '.index' %}
+{% set pageSubTitle = itemType ~ '.subtitle' %}
+
+
+{% block title %}Hello {{ controller_name }}!{% endblock %}
+
+{% block wrapper %}
+    <div class="example-wrapper">
+        <h1>Hello {{ controller_name }}!</h1>
+
+        <div class="btn-toolbar" role="toolbar" aria-label="Toolbar with button groups">
+            <a class="btn btn-primary mr-2" href="{{ path('app_homepage') }}">{{ 'action.back_to_home'|trans }}</a>
+
+            {% block items_buttons %}
+            {% endblock %}
+        </div>
+        <div class="table-responsive">
+            {% block items_table %}
+            {% endblock %}
+        </div>
+    </div>
+{% endblock %}

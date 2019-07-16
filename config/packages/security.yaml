@@ -14,6 +14,14 @@ security:
                 # managers, this option defines which one to use
                 # manager_name: 'customer'
 
+    encoders:
+        # use your user class name here
+        App\Entity\User:
+            # bcrypt or sodium are recommended
+            # sodium is more secure, but requires PHP 7.2 or the Sodium extension
+            algorithm: bcrypt
+            cost: 12
+
     firewalls:
         dev:
             pattern: ^/(_(profiler|wdt)|css|images|js)/
@@ -22,11 +30,12 @@ security:
         main:
             anonymous: true
             form_login:
-                login_path: index
+                login_path: /login
                 check_path: login
             logout:
-                path: logout
-                target: homepage
+                path: /logout
+                target: app_login
+                invalidate_session: true
             guard:
                 authenticators:
                     - App\Security\UserAuthenticator
@@ -37,9 +46,12 @@ security:
             # https://symfony.com/doc/current/security/impersonating_user.html
             # switch_user: true
 
+            access_denied_handler: App\Security\AccessDeniedHandler
+
     # Easy way to control access for large sections of your site
     # Note: Only the *first* access control that matches will be used
     access_control:
-        # - { path: ^/admin, roles: ROLE_ADMIN }
+        - { path: ^/admin, roles: ROLE_ADMIN }
+        - { path: ^/json_fields, roles: ROLE_ADMIN }
         # - { path: ^/profile, roles: ROLE_USER }
         - { path: ^/login$, roles: IS_AUTHENTICATED_ANONYMOUSLY }

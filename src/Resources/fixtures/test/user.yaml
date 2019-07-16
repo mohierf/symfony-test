@@ -1,0 +1,27 @@
+App\Entity\User:
+  superadmin:
+    username: superadmin@superadmin.com
+    firstName: <firstName()>
+    lastName: <lastName()>
+    plainPassword: superadmin
+    roles: [ROLE_SUPER_ADMIN]
+    groups: ['admin', 'guest']
+  admin:
+    username: admin@admin.com
+    firstName: <firstName()>
+    lastName: <lastName()>
+    plainPassword: admin
+    roles: [ROLE_ADMIN]
+    groups: ['admin', 'guest']
+  user:
+    username: user@user.com
+    firstName: <firstName()>
+    lastName: <lastName()>
+    plainPassword: user
+    roles: [ROLE_USER]
+  user_{1..10}:
+    username: '<email()>'
+    firstName (unique): <firstName()>
+    lastName (unique): <lastName()>
+    plainPassword: 'user<current()>'
+    roles: [ROLE_USER]

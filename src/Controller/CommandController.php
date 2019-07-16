@@ -17,15 +17,33 @@ use Symfony\Component\Routing\Annotation\Route;
 class CommandController extends AbstractController
 {
     /**
+     * @var LoggerInterface
+     */
+    private $logger;
+
+    /**
+     * JsonFieldController constructor.
+     *
+     * @param LoggerInterface   $logger
+     */
+    public function __construct(LoggerInterface $logger)
+    {
+        $this->logger = $logger;
+    }
+
+    /**
      * @Route("/", name="command_index")
      * @param CommandRepository $commandRepository
      * @return Response
      */
-    public function index(CommandRepository $commandRepository, LoggerInterface $logger)
+    public function index(CommandRepository $commandRepository)
     {
-        $logger->info("View a list of commands");
+        $this->logger->info("View a list of commands");
         return $this->render('command/index.html.twig', [
             'controller_name' => 'CommandController',
+            'itemType' => 'command',
+            'pageTitle' => 'command.index',
+            'pageSubTitle' => 'command.index.subtitle',
             'items' => $commandRepository->findAll()
         ]);
     }
@@ -51,7 +69,8 @@ class CommandController extends AbstractController
         return $this->render(
             'command/new.html.twig',
             [
-                'command' => $command,
+                'itemType' => 'command',
+                'item' => $command,
                 'form' => $form->createView(),
             ]
         );
@@ -75,13 +94,12 @@ class CommandController extends AbstractController
      *
      * @param Request $request
      * @param Command $command
-     * @param LoggerInterface $logger
      *
      * @return Response
      */
-    public function edit(Request $request, Command $command, LoggerInterface $logger): Response
+    public function edit(Request $request, Command $command): Response
     {
-        $logger->info("Edit a command");
+        $this->logger->info("Edit a command");
         $form = $this->createForm(CommandType::class, $command);
         $form->handleRequest($request);
 
@@ -94,10 +112,33 @@ class CommandController extends AbstractController
         return $this->render(
             'command/edit.html.twig',
             [
-                'command' => $command,
+                'itemType' => 'command',
+                'pageTitle' => 'command.edit',
+                'pageSubTitle' => 'command.edit.subtitle',
+                'item' => $command,
                 'form' => $form->createView(),
             ]
         );
     }
 
+    /**
+     * @Route("/{id}", name="command_delete", methods="DELETE")
+     *
+     * @param Request $request
+     * @param Command $command
+     *
+     * @return Response
+     */
+    public function delete(Request $request, Command $command): Response
+    {
+        if ($this->isCsrfTokenValid('delete'.$command->getId(),
+            $request->request->get('_token'))) {
+            $em = $this->getDoctrine()->getManager();
+            $em->remove($command);
+            $em->flush();
+            $this->addFlash('success', 'Command deleted');
+        }
+
+        return $this->redirectToRoute('command_index');
+    }
 }

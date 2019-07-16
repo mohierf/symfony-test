@@ -40,12 +40,22 @@ class Command
         $this->hosts = new ArrayCollection();
     }
 
+    public function __toString()
+    {
+        return $this->command_name;
+    }
+
     public function getId(): ?int
     {
         return $this->id;
     }
 
     public function getCommandName(): ?string
+    {
+        return $this->command_name;
+    }
+
+    public function getName(): ?string
     {
         return $this->command_name;
     }

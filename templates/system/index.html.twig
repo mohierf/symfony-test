@@ -1,0 +1,38 @@
+{% extends 'layout.html.twig' %}
+
+{% block title %}Hello {{ controller_name }}!{% endblock %}
+
+{% block wrapper %}
+    <style>
+        .example-wrapper { margin: 1em auto; max-width: 800px; width: 95%; font: 18px/1.5 sans-serif; }
+        .example-wrapper code { background: #F5F5F5; padding: 2px 6px; }
+    </style>
+
+    <div class="example-wrapper">
+        <h1>Hello {{ controller_name }}!</h1>
+
+        This friendly message is coming from:
+        <ul>
+            <li>Your controller at <code><a href="{{ '/var/www/html/src/Controller/SystemController.php'|file_link(0) }}">src/Controller/SystemController.php</a></code></li>
+            <li>Your template at <code><a href="{{ '/var/www/html/templates/system/index.html.twig'|file_link(0) }}">templates/system/index.html.twig</a></code></li>
+        </ul>
+
+        <div class="row">
+            <div class="btn-toolbar" role="toolbar" aria-label="Toolbar with button groups">
+                <div class="btn-group mr-2" role="group">
+                    <a class="btn btn-primary" href="{{ path('realm_index') }}">{{ 'realms.index'|trans }}</a>
+                </div>
+                <div class="btn-group mr-2" role="group">
+                    <a class="btn btn-primary" href="{{ path('host_index') }}">{{ 'hosts.index'|trans }}</a>
+                </div>
+                <div class="btn-group mr-2" role="group">
+                    <a class="btn btn-warning" href="{{ path('command_index') }}">{{ 'commands.index'|trans }}</a>
+                </div>
+                <div class="btn-group" role="group">
+                    <a class="btn btn-primary" href="{{ path('host_index') }}">{{ 'hosts.index'|trans }}</a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+{% endblock %}

@@ -1,7 +1,8 @@
 {% if is_granted('ROLE_ADMIN') %}
-    <form method="post" action="{{ path('command_delete', {'id': command.id}) }}" onsubmit="">
+    <form data-type="deletion" data-item="{{ item.id }}" method="post" action="{{ path(itemType ~ '_delete', {'id': item.id}) }}" onsubmit="">
         <input type="hidden" name="_method" value="DELETE">
-        <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ command.id) }}">
-        <input type="submit" class="btn" value="{{ 'action.delete'|trans }}"/>
+        <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ item.id) }}">
+
+        <button type="submit" class="btn btn-sm btn-danger"><i class="fa fa-trash"></i></button>
     </form>
 {% endif %}

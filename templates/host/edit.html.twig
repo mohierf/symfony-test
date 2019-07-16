@@ -9,11 +9,8 @@
                 </div>
                 <div class="card-body">
                     {{ include(itemType ~ '/_form.html.twig', {'button_label': 'action.update'|trans}) }}
-                    <div class="btn-group btn-group-sm" role="group">
-                        <a class="btn btn-primary" href="{{ path(itemType ~ '_index') }}">{{ 'action.back_to_list'|trans }}</a>
-                        <button class="btn">{{ button_label|default('action.save') }}</button>
-                        {{ include(itemType ~ '/_delete_form.html.twig') }}
-                    </div>
+                    <a class="btn btn-primary" href="{{ path(itemType ~ '_index') }}">{{ 'action.back_to_list'|trans }}</a>
+                    {{ include(itemType ~ '/_delete_form.html.twig') }}
                 </div>
             </div>
         </div>
