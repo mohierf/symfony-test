@@ -1,6 +1,6 @@
 {
   "dependencies": {
-    "jsoneditor": "^6.1.0",
+    "jsoneditor": "^9.5.6",
     "startbootstrap-sb-admin-2": "^4.0.6"
   },
   "devDependencies": {
